@@ -1,0 +1,8 @@
+# Léo Martin – Product Builder Engineer
+
+> CV en ligne d'un ingénieur qui conçoit des produits de bout en bout, de l'embarqué au cloud : IoT, backend (Go, Python), microservices et IA.
+
+- [CV en PDF (1 page)](https://me.filou.org/cv/leo-martin-cv.pdf): parcours, compétences et formation.
+- [GitHub](https://github.com/OhohLeo): projets personnels.
+
+Le site est une application web : le parcours professionnel et les schémas d'architecture des projets s'affichent avec JavaScript.
