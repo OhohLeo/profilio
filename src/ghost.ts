@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { experiences as staticExperiences, sideProjects as staticProjects, type Experience, type SideProject } from "./data";
+import { experiences as staticExperiences, type Experience } from "./data";
+import { technologyNames, type TechnologyTag } from "./technologies";
 
 // Content API Ghost (headless). Sans URL + clé, ou en cas d'erreur, on retombe sur src/data.ts.
 const GHOST_URL = (import.meta.env.VITE_GHOST_URL as string | undefined)?.replace(/\/$/, "");
@@ -14,7 +15,7 @@ export type GhostPost = {
   meta_description: string | null;
   canonical_url: string | null;
   published_at: string;
-  tags?: { name: string }[]; // tags publics uniquement : les tags internes (#experience…) ne sont pas renvoyés
+  tags?: TechnologyTag[];
 };
 
 const CURRENT = /aujourd|pr[ée]sent|en cours/i;
@@ -34,18 +35,8 @@ export function mapExperience(p: GhostPost): Experience {
     about: p.custom_excerpt ?? "",
     role: p.meta_description ?? "",
     bullets: listItems(p.html),
-    stack: (p.tags ?? []).map((t) => t.name),
+    stack: technologyNames(p.tags),
     current: CURRENT.test(period),
-  };
-}
-
-export function mapProject(p: GhostPost): SideProject {
-  return {
-    name: p.title,
-    year: Number(p.meta_title) || new Date(p.published_at).getFullYear(),
-    description: p.custom_excerpt ?? "",
-    stack: (p.tags ?? []).map((t) => t.name),
-    url: p.canonical_url ?? undefined,
   };
 }
 
@@ -59,18 +50,18 @@ async function fetchPosts(tagSlug: string): Promise<GhostPost[]> {
   return (await res.json()).posts as GhostPost[];
 }
 
-export type CvContent = { experiences: Experience[]; sideProjects: SideProject[]; source: "ghost" | "static" };
-const fallback: CvContent = { experiences: staticExperiences, sideProjects: staticProjects, source: "static" };
+export type CvContent = { experiences: Experience[]; source: "ghost" | "static" };
+const fallback: CvContent = { experiences: staticExperiences, source: "static" };
 
 export function useCvContent(): CvContent {
   const [content, setContent] = useState<CvContent>(fallback);
   useEffect(() => {
     if (!GHOST_URL || !GHOST_KEY) return;
     let alive = true;
-    Promise.all([fetchPosts("hash-experience"), fetchPosts("hash-projet")])
-      .then(([exp, proj]) => {
+    fetchPosts("hash-experience")
+      .then((exp) => {
         // Ghost vide ou pas encore seedé : on garde le contenu statique.
-        if (alive && exp.length) setContent({ experiences: exp.map(mapExperience), sideProjects: proj.map(mapProject), source: "ghost" });
+        if (alive && exp.length) setContent({ experiences: exp.map(mapExperience), source: "ghost" });
       })
       .catch((e) => console.warn("Ghost indisponible, contenu statique utilisé :", e));
     return () => { alive = false; };

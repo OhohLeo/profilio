@@ -1,11 +1,11 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Experience } from "./data";
-import { ICON_NAMES, NH, NW, iconOf, type Feature, type IconType, type Project, type ZNode } from "./projects";
+import { ICON_NAMES, NH, NW, iconOf, type Feature, type FeatureIconType, type Project, type ZNode } from "./projects";
 
 /** Niveau de zoom courant : projet › fonctionnalité › composant. */
 export type Zoom = { p: string | null; f: string | null; n: string | null };
 
-const ICONS: Record<IconType | "person", ReactNode> = {
+const ICONS: Record<FeatureIconType | "person", ReactNode> = {
   service: <><path d="M9 2l6 3.5v7L9 16l-6-3.5v-7z" /><circle cx="9" cy="9" r="2.2" /></>,
   bus: <path d="M2 6h13M12 3l3 3-3 3M16 12H3M6 9l-3 3 3 3" />,
   db: <><ellipse cx="9" cy="4.5" rx="6" ry="2.5" /><path d="M3 4.5v9c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5v-9M3 9c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5" /></>,
@@ -16,9 +16,15 @@ const ICONS: Record<IconType | "person", ReactNode> = {
   infra: <><rect x="3" y="3" width="12" height="5" rx="1" /><rect x="3" y="10" width="12" height="5" rx="1" /><path d="M5.8 5.5h.01M5.8 12.5h.01" /></>,
   ext: <path d="M5 14a3.5 3.5 0 0 1-.5-7 4.5 4.5 0 0 1 8.7-1 3.8 3.8 0 0 1 .3 8z" />,
   file: <><rect x="3" y="2" width="12" height="14" rx="1" /><path d="M3 7h12M3 11h12M8 7v9" /></>,
+  bell: <><path d="M3 12h12l-1.5-2V7a4.5 4.5 0 0 0-9 0v3zM7 15a2 2 0 0 0 4 0" /><path d="M9 1v1.5" /></>,
+  chart: <><path d="M2 2v14h14M5 12l3-4 3 2 5-6" /></>,
+  sliders: <><path d="M2 5h4m4 0h6M2 13h8m4 0h2" /><circle cx="8" cy="5" r="2" /><circle cx="12" cy="13" r="2" /></>,
+  workflow: <><rect x="1.5" y="6" width="5" height="6" rx="1" /><rect x="12" y="1.5" width="4.5" height="5" rx="1" /><rect x="12" y="11.5" width="4.5" height="5" rx="1" /><path d="M6.5 9H9V4h3M9 9v5h3" /></>,
+  tool: <path d="M11 2a4 4 0 0 0-4.5 5L2 11.5a2.1 2.1 0 0 0 3 3L9.5 10A4 4 0 0 0 15 5.5l-3 2-2-2z" />,
+  calendar: <><rect x="2" y="3.5" width="14" height="12.5" rx="1.5" /><path d="M5 1.5v4m8-4v4M2 7.5h14M5 11h2m3 0h3M5 14h2" /></>,
   person: <><circle cx="9" cy="5.5" r="3.2" /><path d="M3 16c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5" /></>,
 };
-const Ico = ({ t }: { t: IconType | "person" }) => <svg className="ico" viewBox="0 0 18 18" aria-hidden="true">{ICONS[t]}</svg>;
+const Ico = ({ t }: { t: FeatureIconType | "person" }) => <svg className="ico" viewBox="0 0 18 18" aria-hidden="true">{ICONS[t]}</svg>;
 
 // ---- géométrie ----
 type Box = { x: number; y: number };
@@ -73,6 +79,16 @@ type Props = {
   go: (next: Partial<Zoom>) => void;
   zoomOut: () => void;
 };
+
+function BackButton({ label, onBack }: { label: string; onBack: () => void }) {
+  return (
+    <button className="back-button" type="button" aria-label={label} data-tooltip={label} onClick={onBack}>
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M20 12H4m7-7-7 7 7 7" />
+      </svg>
+    </button>
+  );
+}
 
 export default function ProjectZoom({ project: p, exp, logo, zoom, go, zoomOut }: Props) {
   const node = (id: string) => p.nodes.find((n) => n.id === id)!;
@@ -154,20 +170,20 @@ export default function ProjectZoom({ project: p, exp, logo, zoom, go, zoomOut }
   return (
     <section id="proj" className="pop">
       <div className="phead">
-        {logo && <span className="plate" style={{ viewTransitionName: `logo-${p.id}` }}><img src={logo} alt={`Logo ${exp.company}`} /></span>}
+        <div className="project-identity">
+          {!f && !n && <BackButton label="Revenir au parcours principal" onBack={zoomOut} />}
+          {logo && <span className="plate" style={{ viewTransitionName: `logo-${p.id}` }}><img src={logo} alt={`Logo ${exp.company}`} /></span>}
+        </div>
         <div>
-          <p className="when">{exp.period}{exp.duration && ` (${exp.duration})`}</p>
-          <h1>{exp.company}</h1>
-          <p className="role">{exp.role}</p>
-          <p className="pitch">{p.pitch}</p>
-          <div className="chips">{exp.stack.map((t) => <span key={t} className="chip tag">{t}</span>)}</div>
+          <p className="objective-label">Objectif de la plateforme</p>
+          <h1 className="pitch">{p.pitch}</h1>
         </div>
       </div>
 
       <div className="zoom">
         <div className="zpanel">
-          {n ? <NodePanel p={p} n={n} go={go} />
-            : f ? <FeaturePanel f={f} label={(id) => node(id).label} go={go} hover={hoverStep} onHover={setHoverStep} />
+          {n ? <NodePanel p={p} n={n} go={go} onBack={zoomOut} backLabel={f ? "Revenir à la fonctionnalité" : "Revenir à l’architecture"} />
+            : f ? <FeaturePanel f={f} label={(id) => node(id).label} go={go} hover={hoverStep} onHover={setHoverStep} onBack={zoomOut} />
             : <Overview p={p} go={go} onHover={setHoverFeat} />}
         </div>
 
@@ -222,7 +238,6 @@ export default function ProjectZoom({ project: p, exp, logo, zoom, go, zoomOut }
                 ))}
               </g>
             </svg>
-            {(f || n) && <button className="out" type="button" onClick={zoomOut}>− Dézoomer</button>}
           </div>
           <div className="legend">
             {types.map((t) => <span key={t} className={`k-${p.nodes.find((x) => iconOf(p, x) === t)!.kind}`}><Ico t={t} />{ICON_NAMES[t]}</span>)}
@@ -265,10 +280,6 @@ function NodeBox({ p, n, cls, onOpen }: { p: Project; n: ZNode; cls: string; onO
   );
 }
 
-function Personas({ list }: { list: Project["personas"] }) {
-  return <dl className="parts k-user">{list.map((u) => <div key={u.name}><dt>{u.name}</dt><dd>{u.role}</dd></div>)}</dl>;
-}
-
 function Overview({ p, go, onHover }: { p: Project; go: Props["go"]; onHover: (id: string | null) => void }) {
   return (
     <>
@@ -278,22 +289,24 @@ function Overview({ p, go, onHover }: { p: Project; go: Props["go"]; onHover: (i
           <li key={x.id}>
             <button className="feat" type="button" onClick={() => go({ f: x.id, n: null })}
               onMouseEnter={() => onHover(x.id)} onMouseLeave={() => onHover(null)} onFocus={() => onHover(x.id)} onBlur={() => onHover(null)}>
-              <b>{x.title}</b><span>{x.sum}</span>
+              <span className="feat-icon"><Ico t={x.icon} /></span>
+              <div className="feat-copy"><b>{x.title}</b><span>{x.sum}</span></div>
             </button>
           </li>
         ))}
       </ul>
-      <p className="sub">Qui l'utilise</p>
-      <Personas list={p.personas} />
     </>
   );
 }
 
-function FeaturePanel({ f, label, go, hover, onHover }: { f: Feature; label: (id: string) => string; go: Props["go"]; hover: number | null; onHover: (i: number | null) => void }) {
+function FeaturePanel({ f, label, go, hover, onHover, onBack }: { f: Feature; label: (id: string) => string; go: Props["go"]; hover: number | null; onHover: (i: number | null) => void; onBack: () => void }) {
   return (
     <>
-      <p className="lvl">Fonctionnalité</p>
-      <h2>{f.title}</h2>
+      <div className="panel-heading feature-heading">
+        <BackButton label="Revenir à l’architecture" onBack={onBack} />
+        <span className="feat-icon"><Ico t={f.icon} /></span>
+        <div><p className="lvl">Fonctionnalité</p><h2>{f.title}</h2></div>
+      </div>
       <p className="sum">{f.sum}</p>
       <ol className="steps">
         {f.steps.map((s, i) => (
@@ -311,13 +324,14 @@ function FeaturePanel({ f, label, go, hover, onHover }: { f: Feature; label: (id
   );
 }
 
-function NodePanel({ p, n, go }: { p: Project; n: ZNode; go: Props["go"] }) {
+function NodePanel({ p, n, go, onBack, backLabel }: { p: Project; n: ZNode; go: Props["go"]; onBack: () => void; backLabel: string }) {
   const used = p.features.filter((x) => featNodes(x).includes(n.id));
-  const who = p.personas.filter((u) => u.to.includes(n.id));
   return (
     <div className={`k-${n.kind}`}>
-      <p className="kind"><Ico t={iconOf(p, n)} />{ICON_NAMES[iconOf(p, n)]}</p>
-      <h2>{n.label}</h2>
+      <div className="panel-heading">
+        <BackButton label={backLabel} onBack={onBack} />
+        <div><p className="kind"><Ico t={iconOf(p, n)} />{ICON_NAMES[iconOf(p, n)]}</p><h2>{n.label}</h2></div>
+      </div>
       <p className="tech">{n.tech}</p>
       <p className="ntext">{n.text}</p>
       <p className="sub">À l'intérieur</p>
@@ -326,7 +340,6 @@ function NodePanel({ p, n, go }: { p: Project; n: ZNode; go: Props["go"] }) {
       <div className="chips">
         {used.map((x) => <button key={x.id} className="chip" type="button" onClick={() => go({ f: x.id, n: null })}>{x.title}</button>)}
       </div>
-      {who.length > 0 && <><p className="sub">Utilisé par</p><Personas list={who} /></>}
     </div>
   );
 }

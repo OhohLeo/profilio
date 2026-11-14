@@ -4,27 +4,29 @@ import { experiences as staticExperiences, profile, type Experience } from "./da
 import { useCvContent } from "./ghost";
 import { PROJECTS, type Project } from "./projects";
 import ProjectZoom, { type Zoom } from "./ProjectZoom";
-
-type Theme = "light" | "dark";
+import { matchesTechnologies, type MatchMode } from "./technologies";
 
 const LOGOS = import.meta.glob<string>("./assets/logos/*.png", { eager: true, import: "default" });
 const logoOf = (id: string): string | undefined => LOGOS[`./assets/logos/${id}.png`];
 /** Les expériences venues de Ghost ont pour id leur slug (`cv-experience-<id>`). */
 const projectId = (e: Experience) => e.id.replace(/^cv-experience-/, "");
 
-function useTheme(): [Theme, () => void] {
+type Theme = "light" | "dark";
+
+function useTheme() {
   const [theme, setTheme] = useState<Theme>(() => {
     try {
-      const saved = localStorage.getItem("theme") as Theme | null;
-      if (saved) return saved;
+      const saved = localStorage.getItem("theme");
+      if (saved === "light" || saved === "dark") return saved;
     } catch {}
     return matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
   });
-  useEffect(() => {
+  useLayoutEffect(() => {
     document.documentElement.dataset.theme = theme;
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "dark" ? "#10191f" : "#f5f7f8");
     try { localStorage.setItem("theme", theme); } catch {}
   }, [theme]);
-  return [theme, () => setTheme((t) => (t === "dark" ? "light" : "dark"))];
+  return { theme, toggleTheme: () => setTheme((current) => current === "dark" ? "light" : "dark") };
 }
 
 /** `#robeau` ouvre un projet, `#robeau-alertes` une de ses fonctionnalités ; tout autre hash est une ancre de la page. */
@@ -65,9 +67,10 @@ function useZoom() {
 }
 
 export default function App() {
-  const [theme, toggleTheme] = useTheme();
-  const [tech, setTech] = useState<string | null>(null);
-  const { experiences, sideProjects } = useCvContent();
+  const { theme, toggleTheme } = useTheme();
+  const [tech, setTech] = useState<string[]>([]);
+  const [matchMode, setMatchMode] = useState<MatchMode>("any");
+  const { experiences } = useCvContent();
   const { zoom, go, zoomOut } = useZoom();
 
   const project = PROJECTS.find((p) => p.id === zoom.p) ?? null;
@@ -80,34 +83,36 @@ export default function App() {
     return () => removeEventListener("keydown", on);
   });
 
-  // Compte, par technologie, le nombre d'expériences + projets où elle apparaît.
+  // Compte les technologies des expériences affichées.
   const techCounts = useMemo(() => {
     const m = new Map<string, number>();
     const add = (list: string[]) => new Set(list).forEach((t) => m.set(t, (m.get(t) ?? 0) + 1));
     experiences.forEach((e) => add(e.stack));
-    sideProjects.forEach((p) => add(p.stack));
     return [...m.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-  }, [experiences, sideProjects]);
+  }, [experiences]);
 
-  const toggle = (t: string) => setTech((cur) => (cur === t ? null : t));
+  const toggle = (t: string) => setTech((cur) => cur.includes(t) ? cur.filter((name) => name !== t) : [...cur, t]);
 
   return (
     <>
-      <header className="top">
-        {project && projectExp ? (
-          <Rail project={project} company={projectExp.company} zoom={zoom} go={go} />
+      <button className="theme-toggle" type="button" onClick={toggleTheme} aria-pressed={theme === "dark"}
+        aria-label={theme === "dark" ? "Activer le mode clair" : "Activer le mode sombre"}
+        data-tooltip={theme === "dark" ? "Mode clair" : "Mode sombre"}>
+        {theme === "dark" ? (
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+            <circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5" />
+          </svg>
         ) : (
-          <nav>
-            <a href="#parcours">Parcours</a>
-            <a href="#tech">Technos</a>
-            <a href="#projets">Projets</a>
-            <a href="#contact">Contact</a>
-          </nav>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+            <path d="M20 14a8.5 8.5 0 0 1-10-10A8.5 8.5 0 1 0 20 14Z" />
+          </svg>
         )}
-        <button className="ghost" onClick={toggleTheme} aria-label="Changer de thème">
-          {theme === "dark" ? "☀️" : "🌙"}
-        </button>
-      </header>
+      </button>
+      {project && projectExp && (
+        <header className="top">
+          <Rail project={project} company={projectExp.company} zoom={zoom} go={go} />
+        </header>
+      )}
 
       <main>
         {project && projectExp && (
@@ -115,86 +120,111 @@ export default function App() {
         )}
 
         <div hidden={!!project}>
-          <section className="hero">
-            <p className="eyebrow">{profile.name}</p>
-            <h1>{profile.title}</h1>
-            <p className="tagline">{profile.tagline}</p>
-            <div className="cta">
-              <button className="btn" onClick={() => go({ p: "robeau" })}>Explorer le projet Robeau</button>
-              <a className="btn ghost" href={`mailto:${profile.email}`}>Me contacter</a>
-              <a className="btn ghost" href={profile.github} target="_blank" rel="noreferrer">GitHub</a>
+          <header className="hero">
+            <div className="hero-intro">
+              <p className="eyebrow">Ingénierie · Produit · Impact</p>
+              <h1>{profile.title}</h1>
+              <p className="profile-name">{profile.name}</p>
+              <p className="tagline">{profile.tagline}</p>
             </div>
-          </section>
-
-          <section id="parcours">
-            <h2>Parcours</h2>
-            <p className="hint">Chaque projet s'ouvre : fonctionnalités d'un côté, architecture de l'autre. Cliquez pour plonger.</p>
-            {tech && (
-              <p className="filter">
-                Filtre : <strong>{tech}</strong>{" "}
-                <button className="link" onClick={() => setTech(null)}>réinitialiser</button>
-              </p>
-            )}
-            <ol className="timeline">
-              {experiences.map((e) => {
-                const id = projectId(e);
-                return (
-                  <ExperienceCard key={e.id} exp={e} id={id} logo={logoOf(id)} tech={tech} onTech={toggle}
-                    onOpen={PROJECTS.some((p) => p.id === id) ? () => go({ p: id }) : undefined} />
-                );
-              })}
-              <li className="item edu">
-                <div className="card">
-                  <span className="when">{profile.education.year}</span>
-                  <h3>{profile.education.school}</h3>
-                  <p>{profile.education.degree}</p>
-                </div>
-              </li>
-            </ol>
-          </section>
-
-          <section id="tech">
-            <h2>Technologies</h2>
-            <p className="hint">Cliquez sur une techno pour surligner les expériences et projets associés.</p>
-            <div className="chips">
-              {techCounts.map(([t, n]) => (
-                <button key={t} className={"chip" + (tech === t ? " on" : "")} onClick={() => toggle(t)}>
-                  {t} <small>{n}</small>
-                </button>
-              ))}
+            <div className="hero-contact" aria-label="Coordonnées et CV">
+              <span className="location">{profile.location}</span>
+              <a className="email" href={`mailto:${profile.email}`}>{profile.email}</a>
+              <a className="website" href={profile.website}>{profile.website.replace("https://", "")}</a>
+              <div className="cta">
+                <a className="btn" href={`${import.meta.env.BASE_URL}cv/leo-martin-cv.pdf`} download>
+                  <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+                    <path d="M10 2v10m-4-4 4 4 4-4M3 13v4h14v-4" />
+                  </svg>
+                  Télécharger le CV <small>PDF · 1 page</small>
+                </a>
+                <a className="btn ghost" href={profile.github} target="_blank" rel="noreferrer">GitHub ↗</a>
+              </div>
             </div>
-          </section>
-
-          <section id="projets">
-            <h2>Projets personnels</h2>
-            <div className="grid">
-              {sideProjects.map((p) => {
-                const dim = tech && !p.stack.includes(tech);
-                return (
-                  <article key={p.name} className={"card" + (dim ? " dim" : "")}>
-                    <span className="when">{p.year}</span>
-                    <h3>{p.url ? <a href={p.url} target="_blank" rel="noreferrer">{p.name}</a> : p.name}</h3>
-                    <p>{p.description}</p>
-                    <TechList list={p.stack} tech={tech} onTech={toggle} />
-                  </article>
-                );
-              })}
+            <div className="personal-details">
+              <p className="profile-summary">{profile.summary}</p>
+              <p><span>Langues</span>{profile.languages.map((l) => `${l.name} (${l.level})`).join(" · ")}</p>
             </div>
-          </section>
+          </header>
 
-          <section id="contact">
-            <h2>Contact</h2>
-            <p>
-              <a href={`mailto:${profile.email}`}>{profile.email}</a> · {profile.location}
-            </p>
-            <p className="muted">
-              {profile.languages.map((l) => `${l.name} (${l.level})`).join(" · ")} ·{" "}
-              {profile.traits.join(", ")} · {profile.interests.join(", ")}
-            </p>
-            <button className="btn ghost" onClick={() => window.print()}>Imprimer / PDF</button>
-          </section>
+          <TechnologyFilter technologies={techCounts.map(([name]) => name)} tech={tech} matchMode={matchMode} onMatchMode={setMatchMode} onTech={toggle} onClear={() => setTech([])} />
+          <div className="cv-layout">
+            <div className="cv-content">
+              <section id="parcours" aria-labelledby="parcours-heading">
+                <p className="eyebrow">Du terrain au produit</p>
+                <h2 id="parcours-heading">Parcours professionnel</h2>
+                <p className="hint">Explorez les projets pour découvrir leurs fonctionnalités et leur architecture.</p>
+                <ol className="timeline">
+                  {experiences.map((e) => {
+                    const id = projectId(e);
+                    return (
+                      <ExperienceCard key={e.id} exp={e} id={id} logo={logoOf(id)} tech={tech} matchMode={matchMode} onTech={toggle}
+                        onOpen={PROJECTS.some((p) => p.id === id) ? () => go({ p: id }) : undefined} />
+                    );
+                  })}
+                  <li className="item edu">
+                    <div className="period"><span className="when">{profile.education.year}</span></div>
+                    <div className="card">
+                      <h3>{profile.education.school}</h3>
+                      <p>{profile.education.degree}</p>
+                    </div>
+                  </li>
+                </ol>
+              </section>
+
+            </div>
+          </div>
         </div>
       </main>
+    </>
+  );
+}
+
+function TechnologyFilter({ technologies, tech, matchMode, onMatchMode, onTech, onClear }: { technologies: string[]; tech: string[]; matchMode: MatchMode; onMatchMode: (mode: MatchMode) => void; onTech: (tech: string) => void; onClear: () => void }) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const [search, setSearch] = useState("");
+  const normalize = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("fr");
+  const visible = technologies.filter((name) => normalize(name).includes(normalize(search.trim())));
+  const close = () => dialog.current?.close();
+  return (
+    <>
+      <button className={"filter-fab" + (tech.length ? " active" : "")} type="button" aria-label="Filtrer par technologie" data-tooltip="Filtrer par technologie" aria-haspopup="dialog" aria-controls="technology-filter"
+        onClick={() => { setSearch(""); dialog.current?.showModal(); }}>
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" aria-hidden="true">
+          <path d="M3 4h18l-7 8v7l-4 2v-9Z" />
+        </svg>
+        {tech.length > 0 && <span className="filter-count" aria-label={`${tech.length} technologies sélectionnées`}>{tech.length}</span>}
+      </button>
+      <dialog ref={dialog} id="technology-filter" className="filter-sheet" aria-labelledby="filter-title" onKeyDown={(event) => {
+        if (event.key !== "Tab") return;
+        const controls = [...event.currentTarget.querySelectorAll<HTMLElement>("button:not(:disabled), input:not(:disabled), select:not(:disabled)")].filter((element) => element.getClientRects().length > 0);
+        const first = controls[0], last = controls[controls.length - 1];
+        if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+        else if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+      }} onClick={(event) => {
+        if (event.target !== event.currentTarget) return;
+        const bounds = event.currentTarget.getBoundingClientRect();
+        if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) close();
+      }}>
+        <div className="sheet-header">
+          <h2 id="filter-title">Technologies</h2>
+          <button className="icon-button" type="button" onClick={close} aria-label="Fermer les filtres" data-tooltip="Fermer">×</button>
+        </div>
+        <input className="tech-search" type="search" aria-label="Rechercher une technologie" placeholder="Rechercher une techno…" value={search} onChange={(event) => setSearch(event.target.value)} />
+        {tech.length > 1 && <label className="match-mode">Correspondance
+          <select value={matchMode} onChange={(event) => onMatchMode(event.target.value as MatchMode)}>
+            <option value="any">Au moins une</option><option value="all">Toutes</option>
+          </select>
+        </label>}
+        <div className="chips" aria-label="Technologies disponibles">
+          {visible.map((name) => <button key={name} type="button" className={"chip" + (tech.includes(name) ? " on" : "")} aria-pressed={tech.includes(name)} title={tech.includes(name) ? `Retirer ${name}` : `Ajouter ${name}`} onClick={() => onTech(name)}>{name}</button>)}
+        </div>
+        {visible.length === 0 && <p className="hint" role="status">Aucune technologie trouvée.</p>}
+        <div className="sheet-footer">
+          <button className="link" type="button" onClick={onClear} disabled={!tech.length}>Tout effacer</button>
+          <button className="btn" type="button" onClick={close}>Voir le CV</button>
+        </div>
+      </dialog>
     </>
   );
 }
@@ -224,42 +254,49 @@ function Rail({ project, company, zoom, go }: { project: Project; company: strin
   );
 }
 
-function TechList({ list, tech, onTech }: { list: string[]; tech: string | null; onTech: (t: string) => void }) {
+function TechList({ list, tech, onTech }: { list: string[]; tech: string[]; onTech: (t: string) => void }) {
   return (
     <div className="chips small">
       {list.map((t) => (
-        <button key={t} className={"chip" + (tech === t ? " on" : "")} onClick={() => onTech(t)}>{t}</button>
+        <button key={t} type="button" className={"chip" + (tech.includes(t) ? " on" : "")} aria-pressed={tech.includes(t)} title={tech.includes(t) ? `Retirer ${t}` : `Filtrer par ${t}`} onClick={() => onTech(t)}>{t}</button>
       ))}
     </div>
   );
 }
 
-type CardProps = { exp: Experience; id: string; logo?: string; tech: string | null; onTech: (t: string) => void; onOpen?: () => void };
+type CardProps = { exp: Experience; id: string; logo?: string; tech: string[]; matchMode: MatchMode; onTech: (t: string) => void; onOpen?: () => void };
 
-function ExperienceCard({ exp, id, logo, tech, onTech, onOpen }: CardProps) {
-  const [open, setOpen] = useState(!!exp.current);
-  const match = !tech || exp.stack.includes(tech);
+function ExperienceCard({ exp, id, logo, tech, matchMode, onTech, onOpen }: CardProps) {
+  const match = matchesTechnologies(exp.stack, tech, matchMode);
+  const datedDuration = exp.period.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
+  const period = datedDuration?.[1] ?? exp.period;
+  const duration = exp.duration ?? datedDuration?.[2];
   return (
     <li className={"item" + (match ? "" : " dim")}>
-      <article className={"card xp" + (onOpen ? " zoomable" : "")} onClick={onOpen}>
-        <span className={"plate" + (logo ? "" : " empty")} style={{ viewTransitionName: `logo-${id}` }}>
-          {logo && <img src={logo} alt={`Logo ${exp.company}`} />}
-        </span>
-        <div className="xp-body">
-          <span className="when">
-            {exp.period}{exp.duration && <small> ({exp.duration})</small>}
-            {exp.current && <em className="now">en cours</em>}
+      <div className="period">
+        <span className="when">{period}</span>
+        {duration && <small>{duration}</small>}
+        {exp.current && <em className="now">en cours</em>}
+      </div>
+      <article className={"card xp" + (onOpen ? " zoomable" : "")} aria-label={exp.company} onClick={onOpen}>
+        <div className="xp-company">
+          <span className={"plate" + (logo ? "" : " empty")} style={{ viewTransitionName: `logo-${id}` }}>
+            {logo && <img src={logo} alt={`Logo ${exp.company}`} />}
           </span>
-          <h3>{onOpen ? <button className="xp-open" type="button">{exp.company}</button> : exp.company}</h3>
+        </div>
+        <div className="xp-body">
+          {!logo && <h3>{exp.company}</h3>}
           <p className="role">{exp.role}</p>
           <p className="about">{exp.about}</p>
-          {open && <ul>{exp.bullets.map((b) => <li key={b}>{b}</li>)}</ul>}
-          <p className="xp-actions">
-            <button className="link" type="button" aria-expanded={open} onClick={(e) => { e.stopPropagation(); setOpen(!open); }}>
-              {open ? "Masquer les missions" : "Voir les missions"}
-            </button>
-            {onOpen && <span className="xp-cta" aria-hidden="true">Explorer l'architecture →</span>}
-          </p>
+          <div className="xp-missions"><div><ul>{exp.bullets.map((b) => <li key={b}>{b}</li>)}</ul></div></div>
+        </div>
+        <div className="xp-actions">
+          {onOpen && <button className="xp-action-button architecture-button" type="button" aria-label={`Explorer l'architecture de ${exp.company}`} data-tooltip="Explorer l'architecture" onClick={(event) => { event.stopPropagation(); onOpen(); }}>
+            <span className="xp-action-label">Architecture</span>
+            <svg viewBox="0 0 32 32" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M5 16h22m-9-9 9 9-9 9" />
+            </svg>
+          </button>}
         </div>
         <div className="xp-tech" onClick={(e) => e.stopPropagation()}>
           <TechList list={exp.stack} tech={tech} onTech={onTech} />

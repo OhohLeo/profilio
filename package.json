@@ -11,7 +11,8 @@
     "ghost:seed": "node scripts/ghost/seed.mjs",
     "ghost:pull": "node scripts/ghost/pull.mjs",
     "ghost:diff": "node scripts/ghost/diff.mjs",
-    "cv:build": "node --experimental-strip-types scripts/cv/build.mjs"
+    "cv:build": "node --experimental-strip-types scripts/cv/build.mjs",
+    "test": "node --experimental-strip-types tests/technologies.test.mjs"
   },
   "dependencies": {
     "react": "^19.0.0",

@@ -6,10 +6,11 @@ export const GX = 20, GY = 20, DX = 190, DY = 110, NW = 150, NH = 66;
 
 export type Kind = "device" | "core" | "data" | "front" | "ai" | "infra" | "ext";
 export type IconType = "service" | "bus" | "db" | "ui" | "mobile" | "device" | "ai" | "infra" | "ext" | "file";
+export type FeatureIconType = IconType | "bell" | "chart" | "sliders" | "workflow" | "tool" | "calendar";
 export type ZNode = { id: string; x: number; y: number; kind: Kind; label: string; tech: string; text: string; parts: [string, string][] };
 /** Étape d'une fonctionnalité : de `a` vers `b` (`b` vide = action interne au bloc `a`). */
 export type Step = { a: string; b: string; t: string };
-export type Feature = { id: string; title: string; sum: string; steps: Step[] };
+export type Feature = { id: string; icon: FeatureIconType; title: string; sum: string; steps: Step[] };
 export type Persona = { name: string; x: number; y: number; role: string; to: string[] };
 export type Project = {
   id: string;
@@ -31,15 +32,15 @@ export const iconOf = (p: Project, n: ZNode): IconType => p.icons?.[n.id] ?? KIN
 // Blocs et personas sont posés sur une grille (colonne, ligne).
 const N = (id: string, c: number, r: number, kind: Kind, label: string, tech: string, text: string, parts: [string, string][]): ZNode =>
   ({ id, x: GX + c * DX, y: GY + r * DY, kind, label, tech, text, parts });
-const F = (id: string, title: string, sum: string, steps: [string, string, string][]): Feature =>
-  ({ id, title, sum, steps: steps.map(([a, b, t]) => ({ a, b, t })) });
+const F = (id: string, icon: FeatureIconType, title: string, sum: string, steps: [string, string, string][]): Feature =>
+  ({ id, icon, title, sum, steps: steps.map(([a, b, t]) => ({ a, b, t })) });
 const U = (name: string, c: number, r: number, role: string, to: string[]): Persona =>
   ({ name, x: GX + c * DX, y: GY + r * DY, role, to });
 
 export const PROJECTS: Project[] = [
 {
   id: "robeau",
-  pitch: "Une plateforme IoT de bout en bout : de la pose des équipements sur le terrain jusqu'à l'alerte de fuite et la prévision de consommation.",
+  pitch: "Suivre les consommations d’eau des bâtiments, détecter les fuites et piloter les équipements à distance.",
   icons: { bus: "bus", terrain: "mobile" },
   personas: [U("Intervenant", 0, 1, "Pose les équipements et scanne les étiquettes", ["terrain"]), U("Pilote de chantiers", 0, 4, "Planifie interventions et stock", ["backoffice"]), U("Gestionnaire client", 3, 4, "Suit consommations, alertes et seuils de ses sites", ["web"])],
   nodes: [
@@ -62,18 +63,18 @@ export const PROJECTS: Project[] = [
     N("web", 2, 4, "front", "Interface web", "React", "Le tableau de bord des gestionnaires de bâtiments.", [["Tableaux de bord", "Consommations par groupe et par site"], ["Alertes & seuils", "Réglage et suivi"], ["Cartographie", "Sites et équipements sur la carte"], ["Pilotage", "Vannes et configuration des équipements"]]),
   ],
   features: [
-    F("collecte", "Collecte des mesures", "Du compteur à la base de données, quel que soit le réseau radio.", [["capteurs", "passerelle", "Le capteur émet son relevé par radio."], ["passerelle", "reseau", "La passerelle relaie la trame sur un canal chiffré."], ["reseau", "ingestion", "Le serveur de réseau authentifie la trame et la transmet."], ["ingestion", "stockage", "La trame est décodée puis enregistrée."], ["ingestion", "bus", "Un événement « mesure reçue » est publié."]]),
-    F("alertes", "Alertes de consommation", "Une fuite ou une surconsommation déclenche une notification.", [["bus", "metier", "Le traitement de flux reçoit chaque mesure."], ["metier", "stockage", "Il la compare aux seuils du site."], ["metier", "notif", "En cas de dépassement, l'alerte part par e-mail ou SMS."]]),
-    F("pilotage", "Suivi & pilotage", "Les gestionnaires consultent leurs sites et agissent à distance.", [["web", "api", "L'utilisateur se connecte, au besoin via le SSO de son entreprise."], ["api", "metier", "La requête authentifiée est routée vers l'API métier."], ["metier", "stockage", "Les consommations sont agrégées par site et par groupe."], ["metier", "bus", "Une commande de vanne est publiée."], ["bus", "ingestion", "Elle redescend vers l'équipement par le réseau radio."]]),
-    F("previsions", "Prévisions & seuils proposés", "L'historique sert à prévoir la consommation et à suggérer des seuils.", [["metier", "bus", "Une demande de calcul est mise en file."], ["bus", "calcul", "Un worker démarre à la demande."], ["calcul", "stockage", "Il lit l'historique des mesures."], ["calcul", "bus", "Le résultat revient sous forme d'événement."]]),
-    F("parc", "Parc de passerelles", "Des passerelles enrôlées, mises à jour et administrées sans rien exposer.", [["passerelle", "parc", "La passerelle pointe périodiquement avec une requête signée."], ["parc", "", "Le service vérifie la signature et émet les certificats."], ["parc", "passerelle", "Elle reçoit son état désiré : identités, configuration, mises à jour."], ["passerelle", "reseau", "Elle publie alors ses trames avec son propre certificat."]]),
-    F("pose", "Pose sur le terrain", "L'intervenant pose, photographie, et le stock se met à jour.", [["terrain", "backoffice", "L'intervenant saisit sa pose, même hors ligne."], ["backoffice", "ia", "La photo de l'étiquette est lue par un modèle de vision."], ["backoffice", "", "L'équipement est rattaché à son emplacement, le stock est mis à jour."], ["assistant", "backoffice", "Un assistant IA peut interroger le back-office au nom de l'utilisateur."]]),
-    F("exploitation", "Déploiement & supervision", "Livrer souvent, surveiller en continu.", [["infra", "metier", "Chaque service est livré en conteneur par un pipeline."], ["infra", "calcul", "Les jobs de calcul sont lancés à la demande."], ["infra", "", "Métriques, journaux et scans de sécurité alimentent les tableaux de bord."]]),
+    F("collecte", "device", "Collecte des mesures", "Du compteur à la base de données, quel que soit le réseau radio.", [["capteurs", "passerelle", "Le capteur émet son relevé par radio."], ["passerelle", "reseau", "La passerelle relaie la trame sur un canal chiffré."], ["reseau", "ingestion", "Le serveur de réseau authentifie la trame et la transmet."], ["ingestion", "stockage", "La trame est décodée puis enregistrée."], ["ingestion", "bus", "Un événement « mesure reçue » est publié."]]),
+    F("alertes", "bell", "Alertes de consommation", "Une fuite ou une surconsommation déclenche une notification.", [["bus", "metier", "Le traitement de flux reçoit chaque mesure."], ["metier", "stockage", "Il la compare aux seuils du site."], ["metier", "notif", "En cas de dépassement, l'alerte part par e-mail ou SMS."]]),
+    F("pilotage", "sliders", "Suivi & pilotage", "Les gestionnaires consultent leurs sites et agissent à distance.", [["web", "api", "L'utilisateur se connecte, au besoin via le SSO de son entreprise."], ["api", "metier", "La requête authentifiée est routée vers l'API métier."], ["metier", "stockage", "Les consommations sont agrégées par site et par groupe."], ["metier", "bus", "Une commande de vanne est publiée."], ["bus", "ingestion", "Elle redescend vers l'équipement par le réseau radio."]]),
+    F("previsions", "ai", "Prévisions & seuils proposés", "L'historique sert à prévoir la consommation et à suggérer des seuils.", [["metier", "bus", "Une demande de calcul est mise en file."], ["bus", "calcul", "Un worker démarre à la demande."], ["calcul", "stockage", "Il lit l'historique des mesures."], ["calcul", "bus", "Le résultat revient sous forme d'événement."]]),
+    F("parc", "infra", "Parc de passerelles", "Des passerelles enrôlées, mises à jour et administrées sans rien exposer.", [["passerelle", "parc", "La passerelle pointe périodiquement avec une requête signée."], ["parc", "", "Le service vérifie la signature et émet les certificats."], ["parc", "passerelle", "Elle reçoit son état désiré : identités, configuration, mises à jour."], ["passerelle", "reseau", "Elle publie alors ses trames avec son propre certificat."]]),
+    F("pose", "tool", "Pose sur le terrain", "L'intervenant pose, photographie, et le stock se met à jour.", [["terrain", "backoffice", "L'intervenant saisit sa pose, même hors ligne."], ["backoffice", "ia", "La photo de l'étiquette est lue par un modèle de vision."], ["backoffice", "", "L'équipement est rattaché à son emplacement, le stock est mis à jour."], ["assistant", "backoffice", "Un assistant IA peut interroger le back-office au nom de l'utilisateur."]]),
+    F("exploitation", "infra", "Déploiement & supervision", "Livrer souvent, surveiller en continu.", [["infra", "metier", "Chaque service est livré en conteneur par un pipeline."], ["infra", "calcul", "Les jobs de calcul sont lancés à la demande."], ["infra", "", "Métriques, journaux et scans de sécurité alimentent les tableaux de bord."]]),
   ],
 },
 {
   id: "qos",
-  pitch: "Supervision de parcs solaires et éoliens : collecter des mesures hétérogènes, calculer des indicateurs, détecter les événements et prévenir les exploitants.",
+  pitch: "Centraliser les données des parcs solaires et éoliens pour suivre leur performance et alerter les exploitants.",
   icons: { bus: "bus", file: "bus" },
   personas: [U("Exploitant", 0, 1, "Suit sites, mesures et contrats", ["monolithe"]), U("Client", 1, 4, "Consulte ses centrales et ses événements", ["front"]), U("Équipe dev / SRE", 3, 4, "Développe, déploie et exploite la plateforme", ["gitops"])],
   nodes: [
@@ -95,18 +96,18 @@ export const PROJECTS: Project[] = [
     N("front", 2, 4, "front", "Portail web", "React", "La nouvelle interface des exploitants.", [["Sites & mesures", "Courbes et indicateurs"], ["Événements", "Suivi et acquittement"], ["Règles", "Configuration par l'exploitant"]]),
   ],
   features: [
-    F("collecte", "Collecte multi-sources", "Une centaine de formats en entrée, une seule forme de mesure en sortie.", [["sources", "collecte", "Fichiers, trames et relevés arrivent par de nombreux canaux."], ["collecte", "", "Un aiguillage choisit le décodeur adapté au format."], ["collecte", "base", "Les mesures décodées sont enregistrées."], ["collecte", "file", "Une demande de calcul est publiée."]]),
-    F("calcul", "Calcul des indicateurs", "Des mesures brutes aux indicateurs de performance.", [["file", "calcul", "Le répartiteur distribue les jobs."], ["calcul", "base", "Lecture des mesures brutes, écriture des indicateurs."], ["calcul", "evts", "Les règles sont évaluées sur les nouvelles valeurs."]]),
-    F("evenements", "Événements, règles & notifications", "Prévenir la bonne personne quand une centrale décroche.", [["calcul", "evts", "Une valeur anormale crée un événement."], ["evts", "bus", "L'événement est publié, catégorisé puis compté."], ["evts", "", "Les règles de l'exploitant décident qui prévenir, par e-mail."]]),
-    F("migration", "Du monolithe aux microservices", "Les nouveaux services grandissent à côté de l'application historique, sans coupure.", [["monolithe", "base", "L'application historique continue d'écrire dans sa base."], ["base", "cdc", "Chaque changement est capturé dans le journal de la base."], ["cdc", "bus", "Il devient un événement, avec de nouveaux identifiants."], ["bus", "metier", "Les nouveaux services construisent leur vue à partir du flux."], ["cdc", "", "Un audit mesure en continu l'écart entre les deux mondes."]]),
-    F("portail", "Portail unifié", "Une interface moderne posée sur les nouveaux services.", [["front", "auth", "Connexion avec double facteur."], ["front", "bff", "Le portail n'appelle qu'une seule API."], ["bff", "metier", "Elle interroge les services en gRPC et assemble la réponse."]]),
-    F("algorithmes", "Algorithmes éolien & solaire", "Une plateforme pour exécuter les algorithmes d'analyse.", [["algos", "", "Les algorithmes sont planifiés ou lancés à la main."], ["algos", "tierce", "Ils lisent les séries, calculent, puis réinjectent les résultats."]]),
-    F("deploiement", "Déploiement continu", "Un changement poussé dans Git arrive en production sans geste manuel.", [["gitops", "", "L'état voulu est décrit dans un dépôt."], ["gitops", "metier", "Le cluster s'aligne automatiquement sur chaque changement."]]),
+    F("collecte", "device", "Collecte multi-sources", "Une centaine de formats en entrée, une seule forme de mesure en sortie.", [["sources", "collecte", "Fichiers, trames et relevés arrivent par de nombreux canaux."], ["collecte", "", "Un aiguillage choisit le décodeur adapté au format."], ["collecte", "base", "Les mesures décodées sont enregistrées."], ["collecte", "file", "Une demande de calcul est publiée."]]),
+    F("calcul", "chart", "Calcul des indicateurs", "Des mesures brutes aux indicateurs de performance.", [["file", "calcul", "Le répartiteur distribue les jobs."], ["calcul", "base", "Lecture des mesures brutes, écriture des indicateurs."], ["calcul", "evts", "Les règles sont évaluées sur les nouvelles valeurs."]]),
+    F("evenements", "bell", "Événements, règles & notifications", "Prévenir la bonne personne quand une centrale décroche.", [["calcul", "evts", "Une valeur anormale crée un événement."], ["evts", "bus", "L'événement est publié, catégorisé puis compté."], ["evts", "", "Les règles de l'exploitant décident qui prévenir, par e-mail."]]),
+    F("migration", "workflow", "Du monolithe aux microservices", "Les nouveaux services grandissent à côté de l'application historique, sans coupure.", [["monolithe", "base", "L'application historique continue d'écrire dans sa base."], ["base", "cdc", "Chaque changement est capturé dans le journal de la base."], ["cdc", "bus", "Il devient un événement, avec de nouveaux identifiants."], ["bus", "metier", "Les nouveaux services construisent leur vue à partir du flux."], ["cdc", "", "Un audit mesure en continu l'écart entre les deux mondes."]]),
+    F("portail", "ui", "Portail unifié", "Une interface moderne posée sur les nouveaux services.", [["front", "auth", "Connexion avec double facteur."], ["front", "bff", "Le portail n'appelle qu'une seule API."], ["bff", "metier", "Elle interroge les services en gRPC et assemble la réponse."]]),
+    F("algorithmes", "ai", "Algorithmes éolien & solaire", "Une plateforme pour exécuter les algorithmes d'analyse.", [["algos", "", "Les algorithmes sont planifiés ou lancés à la main."], ["algos", "tierce", "Ils lisent les séries, calculent, puis réinjectent les résultats."]]),
+    F("deploiement", "infra", "Déploiement continu", "Un changement poussé dans Git arrive en production sans geste manuel.", [["gitops", "", "L'état voulu est décrit dans un dépôt."], ["gitops", "metier", "Le cluster s'aligne automatiquement sur chaque changement."]]),
   ],
 },
 {
   id: "entech",
-  pitch: "Supervision et régulation d'installations industrielles : chaque nouvelle affaire part d'un classeur de configuration, le code est généré, l'écran et le régulateur suivent.",
+  pitch: "Superviser et piloter des installations industrielles avec une solution configurable pour chaque site.",
   icons: { classeur: "file" },
   personas: [U("Superviseur distant", 0, 0, "Consulte et pilote à distance", ["distant"]), U("Opérateur de site", 2, 0, "Pilote l'installation sur l'écran tactile", ["ihm"]), U("Intégrateur", 0, 1, "Configure l'affaire, dessine et met en service", ["classeur", "editeur"])],
   nodes: [
@@ -122,17 +123,17 @@ export const PROJECTS: Project[] = [
     N("simapp", 1, 3, "core", "Simulateur d'appareils", "Go · Angular", "Remplace le matériel pendant la mise au point.", [["Faux appareils", "Exposent les registres décrits dans le classeur"], ["Console web", "Force les valeurs pendant les essais"]]),
   ],
   features: [
-    F("generation", "Une affaire, un classeur", "Décrire l'installation dans un tableur suffit à générer le socle de l'affaire.", [["classeur", "generateur", "L'intégrateur décrit l'installation dans un tableur."], ["generateur", "regulateur", "Le code du régulateur est généré."], ["generateur", "ihm", "Les écrans de l'affaire aussi."]]),
-    F("supervision", "Supervision sur écran tactile", "L'opérateur voit l'installation et la commande depuis l'écran local.", [["ihm", "regulateur", "L'écran lit les données et envoie les commandes."], ["regulateur", "appareils", "Le régulateur interroge et pilote les appareils."]]),
-    F("regulation", "Régulation temps réel", "Lire, décider, commander, en boucle.", [["regulateur", "appareils", "Le maître de bus lit les entrées."], ["regulateur", "", "Automates et régulateurs PID calculent, sur deux cadences."], ["regulateur", "appareils", "Les consignes sont écrites vers les appareils."]]),
-    F("synoptiques", "Synoptiques sur mesure", "Chaque site a son schéma animé, dessiné sans coder.", [["editeur", "", "L'intégrateur dessine l'installation avec des symboles vectoriels."], ["editeur", "ihm", "L'écran anime le schéma avec les valeurs en direct."]]),
-    F("simulation", "Tester sans matériel", "Deux simulateurs permettent de valider une affaire au bureau.", [["classeur", "simapp", "Le simulateur lit le même classeur que le générateur."], ["simapp", "regulateur", "Il se substitue aux appareils face au régulateur."], ["ihm", "simreg", "Côté écran, un faux régulateur permet de développer l'IHM seule."]]),
-    F("exploitation", "Historique, alertes & accès distant", "Garder la mémoire de l'installation et y accéder de loin.", [["ihm", "services", "Les mesures sont archivées, les alertes partent par SMS."], ["distant", "ihm", "L'écran se consulte et se pilote à distance."]]),
+    F("generation", "file", "Une affaire, un classeur", "Décrire l'installation dans un tableur suffit à générer le socle de l'affaire.", [["classeur", "generateur", "L'intégrateur décrit l'installation dans un tableur."], ["generateur", "regulateur", "Le code du régulateur est généré."], ["generateur", "ihm", "Les écrans de l'affaire aussi."]]),
+    F("supervision", "ui", "Supervision sur écran tactile", "L'opérateur voit l'installation et la commande depuis l'écran local.", [["ihm", "regulateur", "L'écran lit les données et envoie les commandes."], ["regulateur", "appareils", "Le régulateur interroge et pilote les appareils."]]),
+    F("regulation", "sliders", "Régulation temps réel", "Lire, décider, commander, en boucle.", [["regulateur", "appareils", "Le maître de bus lit les entrées."], ["regulateur", "", "Automates et régulateurs PID calculent, sur deux cadences."], ["regulateur", "appareils", "Les consignes sont écrites vers les appareils."]]),
+    F("synoptiques", "ui", "Synoptiques sur mesure", "Chaque site a son schéma animé, dessiné sans coder.", [["editeur", "", "L'intégrateur dessine l'installation avec des symboles vectoriels."], ["editeur", "ihm", "L'écran anime le schéma avec les valeurs en direct."]]),
+    F("simulation", "tool", "Tester sans matériel", "Deux simulateurs permettent de valider une affaire au bureau.", [["classeur", "simapp", "Le simulateur lit le même classeur que le générateur."], ["simapp", "regulateur", "Il se substitue aux appareils face au régulateur."], ["ihm", "simreg", "Côté écran, un faux régulateur permet de développer l'IHM seule."]]),
+    F("exploitation", "infra", "Historique, alertes & accès distant", "Garder la mémoire de l'installation et y accéder de loin.", [["ihm", "services", "Les mesures sont archivées, les alertes partent par SMS."], ["distant", "ihm", "L'écran se consulte et se pilote à distance."]]),
   ],
 },
 {
   id: "ijenko",
-  pitch: "Un boîtier installé dans le logement relie compteur, prises et thermostats à une plateforme en ligne, pour suivre ses consommations et piloter sa maison depuis son téléphone.",
+  pitch: "Suivre les consommations du logement et piloter ses équipements depuis une application mobile.",
   icons: { webapp: "mobile" },
   personas: [U("Habitant", 1, 0, "Pilote son logement et suit ses consommations", ["webapp"]), U("Opérateur du service", 3, 3, "Gère comptes, boîtiers et lieux", ["bo"])],
   nodes: [
@@ -149,12 +150,12 @@ export const PROJECTS: Project[] = [
     N("bo", 3, 2, "front", "Back-office", "exploitation", "L'outil des opérateurs du service.", [["Comptes", "Création et support"], ["Boîtiers", "Association aux lieux"]]),
   ],
   features: [
-    F("pilotage", "Piloter son logement", "Un geste sur le téléphone, une prise qui s'éteint à la maison.", [["webapp", "sdk", "L'habitant appuie sur un équipement."], ["sdk", "api", "L'ordre arrive à l'API."], ["api", "hub", "Elle le confie au hub, qui sait quel boîtier est connecté."], ["hub", "box", "L'ordre descend par le canal chiffré."], ["box", "zigbee", "Le boîtier commande la prise ou le thermostat."]]),
-    F("consommations", "Suivre ses consommations", "Du compteur au graphique.", [["compteur", "box", "Le boîtier lit le compteur en continu."], ["zigbee", "box", "Les prises remontent leurs mesures."], ["box", "hub", "Les valeurs partent vers la plateforme."], ["hub", "api", "Le hub les transmet à l'API."], ["api", "base", "Elles sont historisées."]]),
-    F("scenarios", "Scénarios & programmes", "Des règles composées en ligne, exécutées dans le logement.", [["webapp", "sdk", "L'habitant compose un programme."], ["sdk", "api", "Il est enregistré par l'API."], ["api", "hub", "L'API le pousse vers le boîtier concerné."], ["hub", "box", "Règles et calendrier sont transmis."], ["box", "", "Le boîtier les exécute localement."]]),
-    F("protocoles", "Plateforme multi-protocoles", "Un seul modèle d'équipement, quelle que soit la technologie.", [["zigbee", "box", "Réseau maillé sans fil."], ["compteur", "box", "Liaison directe avec le compteur."], ["tiers", "box", "Produits d'autres fabricants."], ["box", "", "Un pilote par protocole, un modèle commun."]]),
-    F("operateur", "Portage sur box opérateur", "Le service embarqué dans la box Internet d'un opérateur.", [["boxop", "", "L'application embarquée est portée sur une autre plateforme."], ["boxop", "hub", "Elle parle le même protocole au même hub."]]),
-    F("exploitation", "Exploitation du service", "Les opérateurs gèrent comptes et boîtiers.", [["bo", "api", "L'opérateur gère comptes, boîtiers et lieux."], ["api", "base", "Les changements sont enregistrés."]]),
+    F("pilotage", "sliders", "Piloter son logement", "Un geste sur le téléphone, une prise qui s'éteint à la maison.", [["webapp", "sdk", "L'habitant appuie sur un équipement."], ["sdk", "api", "L'ordre arrive à l'API."], ["api", "hub", "Elle le confie au hub, qui sait quel boîtier est connecté."], ["hub", "box", "L'ordre descend par le canal chiffré."], ["box", "zigbee", "Le boîtier commande la prise ou le thermostat."]]),
+    F("consommations", "chart", "Suivre ses consommations", "Du compteur au graphique.", [["compteur", "box", "Le boîtier lit le compteur en continu."], ["zigbee", "box", "Les prises remontent leurs mesures."], ["box", "hub", "Les valeurs partent vers la plateforme."], ["hub", "api", "Le hub les transmet à l'API."], ["api", "base", "Elles sont historisées."]]),
+    F("scenarios", "calendar", "Scénarios & programmes", "Des règles composées en ligne, exécutées dans le logement.", [["webapp", "sdk", "L'habitant compose un programme."], ["sdk", "api", "Il est enregistré par l'API."], ["api", "hub", "L'API le pousse vers le boîtier concerné."], ["hub", "box", "Règles et calendrier sont transmis."], ["box", "", "Le boîtier les exécute localement."]]),
+    F("protocoles", "device", "Plateforme multi-protocoles", "Un seul modèle d'équipement, quelle que soit la technologie.", [["zigbee", "box", "Réseau maillé sans fil."], ["compteur", "box", "Liaison directe avec le compteur."], ["tiers", "box", "Produits d'autres fabricants."], ["box", "", "Un pilote par protocole, un modèle commun."]]),
+    F("operateur", "device", "Portage sur box opérateur", "Le service embarqué dans la box Internet d'un opérateur.", [["boxop", "", "L'application embarquée est portée sur une autre plateforme."], ["boxop", "hub", "Elle parle le même protocole au même hub."]]),
+    F("exploitation", "infra", "Exploitation du service", "Les opérateurs gèrent comptes et boîtiers.", [["bo", "api", "L'opérateur gère comptes, boîtiers et lieux."], ["api", "base", "Les changements sont enregistrés."]]),
   ],
 },
 ];
