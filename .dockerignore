@@ -6,3 +6,9 @@ dist
 !.env.example
 snapshots
 docker-compose.yml
+.mcp.json
+.claude
+.agents
+.codex
+*.pem
+*.key
