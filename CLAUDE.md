@@ -46,7 +46,7 @@ npm run ghost:pull               # sauvegarder les articles dans snapshots/ghost
 - `docker-compose.yml` : `ghost` + `mysql` ; le service `web` (SPA, port 8080) est dans le profil `web`.
 - `./deploy.sh {local|home} {diff|pull|update}` (même schéma que Fel-Hypnose / Bab Charki) :
   - `local` lit `.env` ; `update` = seed Ghost + `docker compose --profile web up -d --build web`.
-  - `home` lit `.env.home` (`.env.home.example`) ; `update` = seed Ghost via l'API Admin + `dist/` (+ rsync si `DEPLOY_RSYNC_TARGET`).
+  - `home` lit `.env.home` (`.env.home.example`) ; `update` = seed Ghost via l'API Admin + build de `dist/` puis `PROFILIO_DIST_DIR=<dist> ./deploy.sh update profilio_web` dans le dépôt `servers` (`DEPLOY_SERVERS_DIR`, défaut `../servers`).
   - Les `.env` sont lus ligne à ligne, jamais `source`.
 
 `scripts/*.mjs` importent `src/data.ts` directement (Node ≥ 22.6, lancés avec `--experimental-strip-types`).

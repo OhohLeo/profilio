@@ -92,7 +92,7 @@ docker compose --profile web up -d --build web
 
 Le site local est alors disponible sur `http://localhost:8080/`. La stack Ghost/MySQL du fichier Compose est prévue pour le développement ; ses mots de passe par défaut ne sont pas adaptés à une mise en ligne.
 
-`deploy.sh` propose aussi les environnements `local` (`.env`) et `home` (`.env.home`, à créer depuis `.env.home.example`). L’action `update` synchronise d’abord les articles vers Ghost, puis construit le site ; en mode `home`, un transfert rsync n’a lieu que si `DEPLOY_RSYNC_TARGET` est défini. Le DNS et l’hébergement de `me.filou.org` doivent être configurés séparément.
+`deploy.sh` propose aussi les environnements `local` (`.env`) et `home` (`.env.home`, à créer depuis `.env.home.example`). L’action `update` synchronise d’abord les articles vers Ghost, puis construit le site ; en mode `home`, `dist/` est ensuite déployé par `PROFILIO_DIST_DIR=<dist> ./deploy.sh update profilio_web`, exécuté dans le dépôt `servers` (`DEPLOY_SERVERS_DIR`, par défaut `../servers`). Le DNS et l’hébergement de `me.filou.org` doivent être configurés séparément.
 
 ## Informations publiques et contrôle avant publication
 
