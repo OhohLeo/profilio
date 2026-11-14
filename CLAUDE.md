@@ -8,7 +8,14 @@
 
 ## Contenu : deux sources
 
-`src/ghost.ts` (`useCvContent`) lit Ghost si `VITE_GHOST_URL` + `VITE_GHOST_CONTENT_KEY` sont définis et que Ghost contient des `#experience`. Sinon, ou si Ghost est injoignable, le site utilise `src/data.ts` (repli, et source du seed). Profil, étude de cas Robeau et schéma d'architecture restent dans `src/data.ts`.
+`src/ghost.ts` (`useCvContent`) lit Ghost si `VITE_GHOST_URL` + `VITE_GHOST_CONTENT_KEY` sont définis et que Ghost contient des `#experience`. Sinon, ou si Ghost est injoignable, le site utilise `src/data.ts` (repli, et source du seed). Le profil reste dans `src/data.ts`.
+
+## Zoom projets
+
+- `src/projects.ts` : pour chaque expérience (même `id` que dans `data.ts`, ou slug Ghost `cv-experience-<id>`), le pitch, les blocs d'architecture (posés sur une grille colonne/ligne), les fonctionnalités (étapes `de → vers`) et les personas. Termes génériques uniquement : pas de nom de service interne, de client ni de fournisseur.
+- `src/ProjectZoom.tsx` : vue projet (fonctionnalités à gauche, schéma SVG zoomable à droite). Quatre niveaux : parcours › projet › fonctionnalité › composant.
+- URL : `#<projet>` ou `#<projet>-<fonctionnalité>` ; tout autre hash reste une ancre du CV.
+- Logos : `src/assets/logos/<id>.png` (fond blanc, chargés par `import.meta.glob`). Une expérience sans entrée dans `projects.ts` s'affiche sans zoom.
 
 ## Modèle de contenu Ghost (inspiré de Bab Charki : articles + tags internes)
 
