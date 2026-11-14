@@ -7,9 +7,10 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "ghost:up": "docker compose up -d",
+    "ghost:up": "docker compose up -d ghost mysql",
     "ghost:seed": "node scripts/ghost/seed.mjs",
-    "ghost:pull": "node scripts/ghost/pull.mjs"
+    "ghost:pull": "node scripts/ghost/pull.mjs",
+    "ghost:diff": "node scripts/ghost/diff.mjs"
   },
   "dependencies": {
     "react": "^19.0.0",
