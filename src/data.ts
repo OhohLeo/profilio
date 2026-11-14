@@ -104,7 +104,7 @@ export const experiences: Experience[] = [
 
 export const skills = [
   "Architecture", "Go", "Python", "TypeScript / React", "PostgreSQL",
-  "API REST / gRPC", "Kafka / NATS", "Docker", "Git / GitLab-CI", "K8s / Docker",
+  "API REST / gRPC", "Kafka / NATS", "Docker", "Git / GitLab-CI",
 ];
 
 export type SideProject = {
