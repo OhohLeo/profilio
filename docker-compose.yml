@@ -1,0 +1,55 @@
+# Ghost local (CMS headless du CV). Admin : http://localhost:2369/ghost
+services:
+  ghost:
+    image: ghost:6-alpine
+    container_name: profilio_ghost
+    restart: unless-stopped
+    ports:
+      - "${GHOST_PORT:-2369}:2368"
+    environment:
+      url: ${GHOST_URL:-http://localhost:2369}
+      NODE_ENV: ${NODE_ENV:-development}
+      database__client: mysql
+      database__connection__host: mysql
+      database__connection__user: ${GHOST_DB_USER:-ghost}
+      database__connection__password: ${GHOST_DB_PASSWORD:-ghostpass}
+      database__connection__database: ${GHOST_DB_NAME:-profilio_db}
+    volumes:
+      - ghost_data:/var/lib/ghost/content
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  mysql:
+    image: mysql:8.0
+    container_name: profilio_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${GHOST_DB_ROOT_PASSWORD:-rootpass}
+      MYSQL_DATABASE: ${GHOST_DB_NAME:-profilio_db}
+      MYSQL_USER: ${GHOST_DB_USER:-ghost}
+      MYSQL_PASSWORD: ${GHOST_DB_PASSWORD:-ghostpass}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # SPA (nginx). Démarrage : docker compose --profile web up -d --build web  → http://localhost:8080
+  web:
+    profiles: ["web"]
+    build:
+      context: .
+      args:
+        VITE_GHOST_URL: ${VITE_GHOST_URL:-}
+        VITE_GHOST_CONTENT_KEY: ${VITE_GHOST_CONTENT_KEY:-}
+    container_name: profilio_web
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-8080}:80"
+
+volumes:
+  ghost_data:
+  mysql_data:
