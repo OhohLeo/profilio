@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { experiences, profile, robeau, sideProjects, type Experience } from "./data";
+import { profile, robeau, type Experience } from "./data";
+import { useCvContent } from "./ghost";
 import ArchDiagram from "./ArchDiagram";
 
 type Theme = "light" | "dark";
@@ -22,6 +23,7 @@ function useTheme(): [Theme, () => void] {
 export default function App() {
   const [theme, toggleTheme] = useTheme();
   const [tech, setTech] = useState<string | null>(null);
+  const { experiences, sideProjects } = useCvContent();
 
   // Compte, par technologie, le nombre d'expériences + projets où elle apparaît.
   const techCounts = useMemo(() => {
@@ -30,7 +32,7 @@ export default function App() {
     experiences.forEach((e) => add(e.stack));
     sideProjects.forEach((p) => add(p.stack));
     return [...m.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-  }, []);
+  }, [experiences, sideProjects]);
 
   const toggle = (t: string) => setTech((cur) => (cur === t ? null : t));
 

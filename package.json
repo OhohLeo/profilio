@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "ghost:up": "docker compose up -d",
+    "ghost:seed": "node scripts/ghost/seed.mjs",
+    "ghost:pull": "node scripts/ghost/pull.mjs"
   },
   "dependencies": {
     "react": "^19.0.0",
