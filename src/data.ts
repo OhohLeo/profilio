@@ -3,9 +3,11 @@
 
 export const profile = {
   name: "Léo Martin",
-  title: "Senior Backend Engineer",
+  title: "Product Builder Engineer",
   tagline: "Go / Python – IA – Microservices – Cloud – IoT",
+  summary: "Ingénieur passionné par la création de produits de bout en bout, de l'embarqué au cloud, combinant IoT, backend et IA.",
   email: "lmartin.leo@gmail.com",
+  website: "https://me.filou.org",
   github: "https://github.com/OhohLeo",
   location: "Nantes (St-Herblain)",
   languages: [
@@ -48,10 +50,12 @@ export const experiences: Experience[] = [
       "Intégrateur de composants (React, UmiJS, Antd, MakoJS, Buckets)",
       "Intégrateur de solutions IA (Google Document AI, TimeFS)",
       "Déploiement & supervision de l'infra (GCE, Docker, Grafana, Ansible, Trivy, ZAP)",
+      "Déploiement d'une plateforme de gestion des passerelles LoRaWAN.",
+      "Back-office ERPNext : gestion des stocks et des interventions, mobilapp & site personnalisé.",
     ],
     stack: [
       "Python", "PostgreSQL", "NATS", "Claude", "React", "UmiJS", "Antd", "MakoJS",
-      "Google Document AI", "TimeFS", "GCE", "Docker", "Grafana", "Ansible", "Trivy", "ZAP",
+      "Google Document AI", "TimeFS", "GCE", "Docker", "Grafana", "Ansible", "Trivy", "ZAP", "LoRaWAN", "ERPNext",
     ],
   },
   {
@@ -106,6 +110,30 @@ export const skills = [
   "Architecture", "Go", "Python", "TypeScript / React", "PostgreSQL",
   "API REST / gRPC", "Kafka / NATS", "Docker", "Git / GitLab-CI",
 ];
+
+// Synthèse pour le PDF d'une page ; le site conserve le détail des missions.
+export const resumeHighlights: Record<string, string[]> = {
+  robeau: [
+    "Conception et orchestration d'une plateforme IoT microservices : Python, PostgreSQL et NATS.",
+    "Intégration des interfaces React et de solutions IA (Claude, Google Document AI, TimeFS).",
+    "Déploiement et supervision cloud : GCE, Docker, Grafana, Ansible ; sécurité avec Trivy et ZAP.",
+    "Déploiement d'une plateforme de gestion des passerelles LoRaWAN.",
+    "Back-office ERPNext : gestion des stocks et des interventions, mobilapp & site personnalisé.",
+  ],
+  qos: [
+    "Migration d'un monolithe vers des microservices Go/gRPC sur GKE et Kubernetes.",
+    "Traitement de flux Kafka (Go, Scala), APIs REST (Go, Ruby/Rails, MySQL, PostgreSQL).",
+    "Plateforme d'exécution d'algorithmes en Python et Redis.",
+  ],
+  entech: [
+    "Supervisions embarquées configurables : Qt/C++, Perl, Raspberry Pi et Modbus.",
+    "Simulateurs de test en Go/Angular et mise en service chez les clients.",
+  ],
+  ijenko: [
+    "Plateforme domotique multi-protocolaire en Perl et APIs REST en Go/Perl/MySQL.",
+    "WebApp mobile Angular/TypeScript ; protocole ZigBee en C et intégration de capteurs tiers.",
+  ],
+};
 
 export type SideProject = {
   name: string;

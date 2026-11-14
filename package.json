@@ -10,7 +10,8 @@
     "ghost:up": "docker compose up -d ghost mysql",
     "ghost:seed": "node scripts/ghost/seed.mjs",
     "ghost:pull": "node scripts/ghost/pull.mjs",
-    "ghost:diff": "node scripts/ghost/diff.mjs"
+    "ghost:diff": "node scripts/ghost/diff.mjs",
+    "cv:build": "node --experimental-strip-types scripts/cv/build.mjs"
   },
   "dependencies": {
     "react": "^19.0.0",
