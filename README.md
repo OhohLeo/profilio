@@ -70,7 +70,7 @@ npm run ghost:seed -- --dry-run  # Examiner les changements prévus
 npm run ghost:seed              # Créer ou mettre à jour les articles Ghost
 ```
 
-Les scripts `ghost:seed` et `deploy.sh ... update` modifient le CMS. Le profil et le PDF continuent d’utiliser `src/data.ts`, même lorsque les expériences du site proviennent de Ghost.
+Le script `ghost:seed` modifie le CMS. Le profil et le PDF continuent d’utiliser `src/data.ts`, même lorsque les expériences du site proviennent de Ghost.
 
 ## Construire et déployer
 
@@ -84,7 +84,7 @@ VITE_GHOST_URL= VITE_GHOST_CONTENT_KEY= npm run build
 
 Pour un site connecté à Ghost, définir `VITE_GHOST_URL` et `VITE_GHOST_CONTENT_KEY` avec les valeurs publiques de production avant le build. Une URL `localhost` ne convient pas à un site distant : elle désignerait la machine de chaque visiteur.
 
-Le `Dockerfile` produit une image nginx qui ne copie que `dist/` depuis l’étape de compilation. La configuration nginx se trouve dans `deploy/nginx.conf.template`. Le TLS doit être géré par l’hébergeur ou le reverse proxy. Les en-têtes nginx ne s’appliquent pas automatiquement à un hébergement statique différent.
+Le `Dockerfile` produit une image nginx qui ne copie que `dist/` depuis l’étape de compilation. Le TLS doit être géré par l’hébergeur ou le reverse proxy. Les en-têtes nginx ne s’appliquent pas automatiquement à un hébergement statique différent.
 
 ```bash
 docker compose --profile web up -d --build web
@@ -92,7 +92,7 @@ docker compose --profile web up -d --build web
 
 Le site local est alors disponible sur `http://localhost:8080/`. La stack Ghost/MySQL du fichier Compose est prévue pour le développement ; ses mots de passe par défaut ne sont pas adaptés à une mise en ligne.
 
-`deploy.sh` propose aussi les environnements `local` (`.env`) et `home` (`.env.home`, à créer depuis `.env.home.example`). L’action `update` synchronise d’abord les articles vers Ghost, puis construit le site ; en mode `home`, `dist/` est ensuite déployé par `PROFILIO_DIST_DIR=<dist> ./deploy.sh update profilio_web`, exécuté dans le dépôt `servers` (`DEPLOY_SERVERS_DIR`, par défaut `../servers`). Le DNS et l’hébergement de `me.filou.org` doivent être configurés séparément.
+Le DNS et l’hébergement de `me.filou.org` doivent être configurés séparément.
 
 ## Informations publiques et contrôle avant publication
 

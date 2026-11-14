@@ -5,3 +5,8 @@ dist
 !.env.example
 !.env.home.example
 snapshots/
+
+# Outillage local de déploiement (non versionné)
+deploy/
+deploy.sh
+scripts/
