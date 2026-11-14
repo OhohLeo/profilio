@@ -13,9 +13,9 @@
     "test:security": "node tests/security.test.mjs",
     "preview": "vite preview",
     "ghost:up": "docker compose up -d ghost mysql",
-    "ghost:seed": "node scripts/ghost/seed.mjs",
-    "ghost:pull": "node scripts/ghost/pull.mjs",
-    "ghost:diff": "node scripts/ghost/diff.mjs"
+    "ghost:seed": "node --experimental-strip-types --disable-warning=ExperimentalWarning scripts/ghost/seed.mjs",
+    "ghost:pull": "node --experimental-strip-types --disable-warning=ExperimentalWarning scripts/ghost/pull.mjs",
+    "ghost:diff": "node --experimental-strip-types --disable-warning=ExperimentalWarning scripts/ghost/diff.mjs"
   },
   "dependencies": {
     "react": "^19.0.0",

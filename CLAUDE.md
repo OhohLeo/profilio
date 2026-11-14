@@ -49,4 +49,4 @@ npm run ghost:pull               # sauvegarder les articles dans snapshots/ghost
   - `home` lit `.env.home` (`.env.home.example`) ; `update` = seed Ghost via l'API Admin + `dist/` (+ rsync si `DEPLOY_RSYNC_TARGET`).
   - Les `.env` sont lus ligne à ligne, jamais `source`.
 
-`scripts/*.mjs` importent `src/data.ts` directement (Node ≥ 22.18, type stripping natif).
+`scripts/*.mjs` importent `src/data.ts` directement (Node ≥ 22.6, lancés avec `--experimental-strip-types`).
