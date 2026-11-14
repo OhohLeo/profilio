@@ -28,8 +28,18 @@ npm run dev                      # SPA
 npm run ghost:up                 # Ghost local : http://localhost:2369/ghost (puis créer l'intégration personnalisée)
 cp .env.example .env             # renseigner GHOST_ADMIN_API_KEY
 npm run ghost:seed -- --dry-run  # voir les articles qui seraient créés
+npm run ghost:diff               # écart data.ts ↔ Ghost (code 1 s'il y en a)
 npm run ghost:seed               # créer / mettre à jour dans Ghost (idempotent, par slug)
 npm run ghost:pull               # sauvegarder les articles dans snapshots/ghost/posts/
 ```
+
+## Docker et déploiement
+
+- `Dockerfile` : build Vite (Node 22) puis nginx (`deploy/nginx.conf.template`, en-têtes de sécurité + CSP dont `connect-src` = origine Ghost, substituée via `GHOST_ORIGIN`). Args : `VITE_GHOST_URL`, `VITE_GHOST_CONTENT_KEY`. Ghost utilise l'image officielle (pas de Dockerfile Ghost).
+- `docker-compose.yml` : `ghost` + `mysql` ; le service `web` (SPA, port 8080) est dans le profil `web`.
+- `./deploy.sh {local|home} {diff|pull|update}` (même schéma que Fel-Hypnose / Bab Charki) :
+  - `local` lit `.env` ; `update` = seed Ghost + `docker compose --profile web up -d --build web`.
+  - `home` lit `.env.home` (`.env.home.example`) ; `update` = seed Ghost via l'API Admin + `dist/` (+ rsync si `DEPLOY_RSYNC_TARGET`).
+  - Les `.env` sont lus ligne à ligne, jamais `source`.
 
 `scripts/*.mjs` importent `src/data.ts` directement (Node ≥ 22.18, type stripping natif).

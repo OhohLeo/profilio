@@ -37,6 +37,19 @@ services:
       timeout: 5s
       retries: 5
 
+  # SPA (nginx). Démarrage : docker compose --profile web up -d --build web  → http://localhost:8080
+  web:
+    profiles: ["web"]
+    build:
+      context: .
+      args:
+        VITE_GHOST_URL: ${VITE_GHOST_URL:-}
+        VITE_GHOST_CONTENT_KEY: ${VITE_GHOST_CONTENT_KEY:-}
+    container_name: profilio_web
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-8080}:80"
+
 volumes:
   ghost_data:
   mysql_data:
