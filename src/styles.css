@@ -18,6 +18,8 @@ html { scroll-behavior: smooth; }
 body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.6 var(--sans); }
 a { color: var(--accent); }
 button { font: inherit; color: inherit; }
+.skip-link { position: absolute; left: 12px; top: -60px; z-index: 20; padding: 10px 16px; border-radius: 8px; background: var(--accent); color: var(--accent-fg); font-weight: 600; text-decoration: none; }
+.skip-link:focus { top: 12px; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 main, .top { max-width: 1240px; margin: 0 auto; padding: 0 28px; }
 section { padding: 48px 0 16px; }
@@ -48,7 +50,6 @@ button.stop b { color: var(--accent); }
 /* ---- CV ---- */
 .hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 28px 40px; padding: 56px 0 28px; border-bottom: 1px solid var(--line); }
 .hero h1 { letter-spacing: -.05em; font-weight: 750; }
-.eyebrow { color: var(--accent); font-size: .72rem; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; margin: 0 0 10px; }
 .profile-name { font-size: clamp(1.2rem, 3vw, 1.65rem); font-weight: 550; letter-spacing: -.025em; margin: 10px 0 0; color: var(--accent); }
 .tagline { font-size: 1rem; color: var(--muted); margin: 8px 0 0; }
 .hero-contact { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
@@ -151,6 +152,7 @@ body:has(.filter-sheet[open]) { overflow: hidden; }
 .xp-action-button:focus-visible, .xp-action-button:focus-visible svg { transition-duration: 0s; }
 .xp-tech { grid-column: 2; grid-row: 2; }
 .xp-tech .chips { margin-top: 0; gap: 4px; }
+.mission-toggle, .touch-hint, .xp-action-label .long { display: none; }
 [data-tooltip] { position: relative; }
 .theme-toggle[data-tooltip], .filter-fab[data-tooltip] { position: fixed; }
 [data-tooltip]::after { content: attr(data-tooltip); position: absolute; right: calc(100% + 10px); top: 50%; transform: translateY(-50%); width: max-content; max-width: min(230px, 65vw); padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--fg); color: var(--bg); box-shadow: 0 3px 12px #0002; font-size: .75rem; font-weight: 500; line-height: 1.4; text-align: left; pointer-events: none; opacity: 0; visibility: hidden; z-index: 12; }
@@ -258,31 +260,65 @@ svg.focus .base { opacity: .45; }
   .phead .plate { width: 76px; height: 52px; }
 }
 @media (max-width: 700px) {
-  main, .top { padding-left: 18px; padding-right: 18px; }
-  .cv-layout { padding-top: 24px; }
-  .timeline { --period-width: 64px; --timeline-gap: 18px; }
-  .period .when { font-size: .7rem; }
-  .period small { font-size: .65rem; }
-  .period .now { font-size: .6rem; padding: 2px 6px; }
-  .filter-sheet { padding: 18px 18px max(18px, env(safe-area-inset-bottom)); }
-  .personal-details { grid-template-columns: minmax(0, 1fr); gap: 16px; }
-  .phead { grid-template-columns: minmax(0, 1fr); }
+  main, .top { padding-left: 16px; padding-right: 16px; }
+  .cv-layout { padding-top: 16px; }
+  .hero { padding: 64px 0 24px; }
   .hero-contact .cta { width: 100%; }
+  .hero-contact .cta .btn { flex: 1 1 auto; min-height: 46px; }
+  .hero-contact .cta .btn:first-child { flex-basis: 100%; }
   .btn { flex-wrap: wrap; }
-  .xp { grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 12px 48px 12px 12px; }
-  .xp .plate { height: 40px; width: 64px; }
-  .xp-company { width: 64px; grid-column: 1; grid-row: 1; }
-  .xp-body { grid-column: 1; grid-row: 2; font-size: .88rem; }
-  .xp-actions { top: 8px; right: 4px; bottom: 8px; width: 36px; }
-  .architecture-button { width: 36px; }
+  .personal-details { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .filter-sheet { padding: 18px 16px max(18px, env(safe-area-inset-bottom)); max-height: 82dvh; }
+  .filter-fab { right: max(16px, env(safe-area-inset-right)); bottom: max(16px, env(safe-area-inset-bottom)); }
+  .tech-search { font-size: 1rem; }
+
+  /* Frise : la période passe au-dessus de la carte, qui prend toute la largeur. */
+  .timeline { --period-width: 0px; --timeline-gap: 0px; margin-top: 16px; padding-left: 22px; }
+  .item { grid-template-columns: minmax(0, 1fr); gap: 8px; padding-bottom: 20px; }
+  .item::after { left: -17px; top: 8px; }
+  .item::before { left: -22px; top: 8px; }
+  .period { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; padding-top: 0; text-align: left; }
+  .period .when { font-size: .85rem; font-weight: 600; color: var(--fg); }
+  .period small { display: inline; margin: 0; font-size: .8rem; }
+  .period .now { margin: 0; font-size: .68rem; padding: 2px 8px; }
+  .card { padding: 16px; }
+
+  /* Carte : logo, texte, technos, puis une vraie barre d'action en bas. */
+  .xp { grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 14px 14px 0; }
+  .xp .plate { height: 40px; width: 76px; }
+  .xp-company { align-items: flex-start; width: auto; grid-column: 1; grid-row: 1; }
+  .xp-body { grid-column: 1; grid-row: 2; font-size: .92rem; }
   .xp-tech { grid-column: 1; grid-row: 3; }
-  .xp-tech .chips { justify-content: flex-start; }
+  .xp-actions { position: static; grid-column: 1; grid-row: 4; width: auto; margin: 0 -14px; }
+  .architecture-button { flex-direction: row; justify-content: space-between; width: 100%; min-height: 48px; padding: 0 14px; border-left: 0; border-top: 1px solid var(--line); border-radius: 0 0 11px 11px; }
+  .architecture-button .xp-action-label { writing-mode: horizontal-tb; text-orientation: mixed; font-size: .88rem; font-weight: 600; letter-spacing: 0; line-height: 1.2; text-transform: none; color: var(--accent); }
+  .xp-action-label .long { display: inline; }
+  .architecture-button svg { width: 22px; height: 22px; transform: none; }
+  .xp:not(:has(.architecture-button)) { padding-bottom: 14px; }
+
+  /* Projet */
+  #proj { padding-top: 12px; }
+  .phead .plate { width: 64px; height: 44px; }
+  .phead h1 { font-size: 1.05rem; }
+  .stage { top: 54px; margin: 0 -16px; padding: 0 16px 8px; }
+  .feat { padding: 14px; min-height: 64px; }
   .rail-item.off, .stop small { display: none; }
+  .top { padding-right: 58px; }
+  .stop { min-height: 40px; min-width: 0; }
+  .stop b { display: block; max-width: 36vw; overflow: hidden; text-overflow: ellipsis; }
+  .theme-toggle { top: 8px; right: 12px; }
 }
 @media (hover: none), (pointer: coarse) {
-  .xp .xp-missions { grid-template-rows: 1fr; opacity: 1; visibility: visible; }
   .xp .xp-action-button { opacity: 1; }
   .xp .xp-action-button svg { opacity: .75; transform: none; }
+  /* Pas de survol : les missions s'ouvrent à la demande. */
+  .xp:hover .xp-missions, .xp:focus-within .xp-missions { grid-template-rows: 0fr; opacity: 0; visibility: hidden; }
+  .xp.open .xp-missions { grid-template-rows: 1fr; opacity: 1; visibility: visible; }
+  .mission-toggle { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin: 4px 0 0 -4px; padding: 0 4px; border: 0; background: none; color: var(--accent); font-size: .88rem; font-weight: 600; cursor: pointer; }
+  .mission-toggle svg { transition: transform .25s ease; }
+  .xp.open .mission-toggle svg { transform: rotate(180deg); }
+  .chips.small .chip { min-height: 32px; padding: 3px 11px; }
+  .touch-hint { display: block; margin: 8px 2px 0; font-size: .8rem; color: var(--muted); }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

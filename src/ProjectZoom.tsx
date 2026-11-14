@@ -243,6 +243,7 @@ export default function ProjectZoom({ project: p, exp, logo, zoom, go, zoomOut }
             {types.map((t) => <span key={t} className={`k-${p.nodes.find((x) => iconOf(p, x) === t)!.kind}`}><Ico t={t} />{ICON_NAMES[t]}</span>)}
             <span className="k-user"><Ico t="person" />Utilisateur</span>
           </div>
+          <p className="touch-hint">{n ? "Touchez le fond du schéma pour revenir." : "Touchez un bloc pour zoomer dessus."}</p>
         </div>
       </div>
     </section>

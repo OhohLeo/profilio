@@ -1,9 +1,10 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { experiences as staticExperiences, profile, type Experience } from "./data";
 import { useCvContent } from "./ghost";
 import { PROJECTS, type Project } from "./projects";
-import ProjectZoom, { type Zoom } from "./ProjectZoom";
+import type { Zoom } from "./ProjectZoom";
+const ProjectZoom = lazy(() => import("./ProjectZoom"));
 import { matchesTechnologies, type MatchMode } from "./technologies";
 
 const LOGOS = import.meta.glob<string>("./assets/logos/*.png", { eager: true, import: "default" });
@@ -114,15 +115,17 @@ export default function App() {
         </header>
       )}
 
+      <a className="skip-link" href="#parcours">Aller au parcours</a>
       <main>
         {project && projectExp && (
-          <ProjectZoom key={project.id} project={project} exp={projectExp} logo={logoOf(project.id)} zoom={zoom} go={go} zoomOut={zoomOut} />
+          <Suspense fallback={<p className="hint" role="status">Chargement du projet…</p>}>
+            <ProjectZoom key={project.id} project={project} exp={projectExp} logo={logoOf(project.id)} zoom={zoom} go={go} zoomOut={zoomOut} />
+          </Suspense>
         )}
 
         <div hidden={!!project}>
           <header className="hero">
             <div className="hero-intro">
-              <p className="eyebrow">Ingénierie · Produit · Impact</p>
               <h1>{profile.title}</h1>
               <p className="profile-name">{profile.name}</p>
               <p className="tagline">{profile.tagline}</p>
@@ -151,7 +154,6 @@ export default function App() {
           <div className="cv-layout">
             <div className="cv-content">
               <section id="parcours" aria-labelledby="parcours-heading">
-                <p className="eyebrow">Du terrain au produit</p>
                 <h2 id="parcours-heading">Parcours professionnel</h2>
                 <p className="hint">Explorez les projets pour découvrir leurs fonctionnalités et leur architecture.</p>
                 <ol className="timeline">
@@ -271,6 +273,7 @@ function ExperienceCard({ exp, id, logo, tech, matchMode, onTech, onOpen }: Card
   const datedDuration = exp.period.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
   const period = datedDuration?.[1] ?? exp.period;
   const duration = exp.duration ?? datedDuration?.[2];
+  const [open, setOpen] = useState(false);
   return (
     <li className={"item" + (match ? "" : " dim")}>
       <div className="period">
@@ -278,7 +281,7 @@ function ExperienceCard({ exp, id, logo, tech, matchMode, onTech, onOpen }: Card
         {duration && <small>{duration}</small>}
         {exp.current && <em className="now">en cours</em>}
       </div>
-      <article className={"card xp" + (onOpen ? " zoomable" : "")} aria-label={exp.company} onClick={onOpen}>
+      <article className={"card xp" + (onOpen ? " zoomable" : "") + (open ? " open" : "")} aria-label={exp.company} onClick={onOpen}>
         <div className="xp-company">
           <span className={"plate" + (logo ? "" : " empty")} style={{ viewTransitionName: `logo-${id}` }}>
             {logo && <img src={logo} alt={`Logo ${exp.company}`} />}
@@ -288,11 +291,16 @@ function ExperienceCard({ exp, id, logo, tech, matchMode, onTech, onOpen }: Card
           {!logo && <h3>{exp.company}</h3>}
           <p className="role">{exp.role}</p>
           <p className="about">{exp.about}</p>
-          <div className="xp-missions"><div><ul>{exp.bullets.map((b) => <li key={b}>{b}</li>)}</ul></div></div>
+          <button className="mission-toggle" type="button" aria-expanded={open} aria-controls={`missions-${id}`}
+            onClick={(event) => { event.stopPropagation(); setOpen((v) => !v); }}>
+            {open ? "Masquer les missions" : `Voir les ${exp.bullets.length} missions`}
+            <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5 8 5 5 5-5" /></svg>
+          </button>
+          <div className="xp-missions" id={`missions-${id}`}><div><ul>{exp.bullets.map((b) => <li key={b}>{b}</li>)}</ul></div></div>
         </div>
         <div className="xp-actions">
           {onOpen && <button className="xp-action-button architecture-button" type="button" aria-label={`Explorer l'architecture de ${exp.company}`} data-tooltip="Explorer l'architecture" onClick={(event) => { event.stopPropagation(); onOpen(); }}>
-            <span className="xp-action-label">Architecture</span>
+            <span className="xp-action-label"><span className="long">Explorer l'</span>Architecture</span>
             <svg viewBox="0 0 32 32" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M5 16h22m-9-9 9 9-9 9" />
             </svg>
