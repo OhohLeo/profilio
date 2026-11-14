@@ -104,7 +104,7 @@ export const experiences: Experience[] = [
 
 export const skills = [
   "Architecture", "Go", "Python", "TypeScript / React", "PostgreSQL",
-  "API REST / gRPC", "Kafka / NATS", "Docker", "Git / GitLab-CI", "K8s / Docker",
+  "API REST / gRPC", "Kafka / NATS", "Docker", "Git / GitLab-CI",
 ];
 
 export type SideProject = {
@@ -137,74 +137,3 @@ export const sideProjects: SideProject[] = [
     stack: ["Raspberry Pi", "XU4", "K3S", "Ansible"],
   },
 ];
-
-// ---- Robeau : étude de cas (nœuds du schéma d'architecture) ----
-export type ArchNode = {
-  id: string;
-  label: string;
-  group: "device" | "core" | "front" | "ai" | "infra";
-  x: number;
-  y: number;
-  text: string;
-  tech: string[];
-  /** À confirmer par Léo avant publication */
-  todo?: boolean;
-};
-
-export const robeau = {
-  pitch:
-    "Robeau installe, supervise et pilote les consommations d'eau dans les bâtiments. J'y ai conçu et orchestré la plateforme de bout en bout : de la pose des équipements sur le terrain jusqu'à l'analyse des données.",
-  metrics: [
-    { value: "2 000+", label: "équipements supervisés" },
-    { value: "18 mois", label: "de construction de la plateforme" },
-    { value: "CTO", label: "fondateur" },
-  ],
-  nodes: [
-    {
-      id: "devices", label: "Équipements IoT", group: "device", x: 70, y: 150,
-      text: "Compteurs, capteurs et passerelles posés dans les bâtiments, identifiés par leur EUI. Plus de 2 000 équipements supervisés.",
-      tech: ["IoT"],
-    },
-    {
-      id: "bus", label: "Bus de messages", group: "core", x: 260, y: 150,
-      text: "NATS relie les microservices : ingestion, traitement et diffusion des événements.",
-      tech: ["NATS"],
-    },
-    {
-      id: "services", label: "Microservices", group: "core", x: 450, y: 70,
-      text: "Plateforme de microservices Python que j'ai orchestrée : ingestion des mesures, règles métier, pilotage.",
-      tech: ["Python"],
-    },
-    {
-      id: "db", label: "Données", group: "core", x: 450, y: 230,
-      text: "PostgreSQL pour l'état et l'historique, TimeFS pour les séries temporelles.",
-      tech: ["PostgreSQL", "TimeFS"],
-    },
-    {
-      id: "ai", label: "IA", group: "ai", x: 640, y: 70,
-      text: "Intégration de Claude et de Google Document AI pour automatiser l'exploitation de documents et l'assistance.",
-      tech: ["Claude", "Google Document AI"],
-    },
-    {
-      id: "front", label: "Interfaces", group: "front", x: 640, y: 230,
-      text: "Applications web assemblées à partir de composants : React, UmiJS, Ant Design, build MakoJS, stockage Buckets.",
-      tech: ["React", "UmiJS", "Antd", "MakoJS"],
-    },
-    {
-      id: "infra", label: "Infra & sécurité", group: "infra", x: 360, y: 340,
-      text: "Déploiement sur GCE avec Docker et Ansible, supervision Grafana, scans de sécurité Trivy et ZAP.",
-      tech: ["GCE", "Docker", "Ansible", "Grafana", "Trivy", "ZAP"],
-    },
-    {
-      id: "backoffice", label: "Back-office terrain", group: "front", x: 160, y: 300,
-      text: "Back-office de pose et suivi des équipements : chantiers, sites, interventions, emplacements, stock. (À valider avant publication.)",
-      tech: ["Frappe", "ERPNext"],
-      todo: true,
-    },
-  ] satisfies ArchNode[],
-  links: [
-    ["devices", "bus"], ["bus", "services"], ["services", "db"], ["services", "ai"],
-    ["services", "front"], ["db", "front"], ["backoffice", "bus"], ["infra", "services"],
-    ["infra", "db"],
-  ] as [string, string][],
-};
