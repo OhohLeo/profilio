@@ -5,7 +5,7 @@
 FROM node:22-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm ci --ignore-scripts
 COPY . .
 ARG VITE_GHOST_URL=""
 ARG VITE_GHOST_CONTENT_KEY=""

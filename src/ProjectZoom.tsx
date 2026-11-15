@@ -105,7 +105,7 @@ export default function ProjectZoom({ project: p, exp, logo, zoom, go, zoomOut }
   // Liens de fond : une ligne par paire de blocs reliée par au moins une fonctionnalité.
   const base = useMemo(() => {
     const pairs = new Map<string, [string, string]>();
-    p.features.forEach((x) => x.steps.forEach((s) => { if (s.b) pairs.set([s.a, s.b].sort().join("|"), [s.a, s.b]); }));
+    p.features.forEach((x) => x.steps.forEach((s) => { if (s.b) pairs.set([s.a, s.b].sort((x, y) => x.localeCompare(y)).join("|"), [s.a, s.b]); }));
     return [...pairs.entries()].map(([k, [a, b]]) => ({ k, ...seg(node(a), node(b)) }));
   }, [p]);
 
@@ -311,9 +311,12 @@ function FeaturePanel({ f, label, go, hover, onHover, onBack }: { f: Feature; la
       <p className="sum">{f.sum}</p>
       <ol className="steps">
         {f.steps.map((s, i) => (
-          <li key={i} tabIndex={0} className={hover === i ? "hot" : undefined}
-            onMouseEnter={() => onHover(i)} onMouseLeave={() => onHover(null)} onFocus={() => onHover(i)} onBlur={() => onHover(null)}>
-            <div><small>{label(s.a)}{s.b && ` → ${label(s.b)}`}</small>{s.t}</div>
+          <li key={i} className={hover === i ? "hot" : undefined}>
+            <button type="button" className="step" aria-pressed={hover === i}
+              onClick={() => onHover(hover === i ? null : i)}
+              onMouseEnter={() => onHover(i)} onMouseLeave={() => onHover(null)} onFocus={() => onHover(i)} onBlur={() => onHover(null)}>
+              <span><small>{label(s.a)}{s.b && ` → ${label(s.b)}`}</small>{s.t}</span>
+            </button>
           </li>
         ))}
       </ol>

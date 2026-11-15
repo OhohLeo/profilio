@@ -20,9 +20,23 @@ export type GhostPost = {
 
 const CURRENT = /aujourd|pr[ée]sent|en cours/i;
 
+const LI_OPEN = /<li(?:\s[^>]*)?>/gi;
+const LI_CLOSE = /<\/li>/gi;
+
+/** Contenu de chaque <li>, extrait par balayage linéaire (pas de `[\s\S]*?` à retour arrière). */
 export function listItems(html: string | null): string[] {
-  return [...(html ?? "").matchAll(/<li[^>]*>([\s\S]*?)<\/li>/gi)].map((m) =>
-    m[1].replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&#39;/g, "'").replace(/&quot;/g, '"').trim(),
+  const source = html ?? "";
+  const items: string[] = [];
+  LI_OPEN.lastIndex = 0;
+  for (let open = LI_OPEN.exec(source); open; open = LI_OPEN.exec(source)) {
+    LI_CLOSE.lastIndex = LI_OPEN.lastIndex;
+    const close = LI_CLOSE.exec(source);
+    if (!close) break;
+    items.push(source.slice(LI_OPEN.lastIndex, close.index));
+    LI_OPEN.lastIndex = LI_CLOSE.lastIndex;
+  }
+  return items.map((item) =>
+    item.replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&#39;/g, "'").replace(/&quot;/g, '"').trim(),
   );
 }
 

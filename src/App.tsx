@@ -276,13 +276,20 @@ function TechList({ list, tech, onTech }: { list: string[]; tech: string[]; onTe
   );
 }
 
+/** « 2024 – 2025 (18 mois) » → ["2024 – 2025", "18 mois"]. Sans regex : pas de retour arrière coûteux. */
+function splitPeriod(value: string): [string, string | undefined] {
+  const text = value.trimEnd();
+  const open = text.lastIndexOf("(");
+  const inner = open >= 0 && text.endsWith(")") ? text.slice(open + 1, -1) : "";
+  return inner && !inner.includes(")") ? [text.slice(0, open).trimEnd(), inner] : [value, undefined];
+}
+
 type CardProps = { exp: Experience; id: string; logo?: string; tech: string[]; matchMode: MatchMode; onTech: (t: string) => void; onOpen?: () => void };
 
 function ExperienceCard({ exp, id, logo, tech, matchMode, onTech, onOpen }: CardProps) {
   const match = matchesTechnologies(exp.stack, tech, matchMode);
-  const datedDuration = exp.period.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
-  const period = datedDuration?.[1] ?? exp.period;
-  const duration = exp.duration ?? datedDuration?.[2];
+  const [period, datedDuration] = splitPeriod(exp.period);
+  const duration = exp.duration ?? datedDuration;
   const [open, setOpen] = useState(false);
   return (
     <li className={"item" + (match ? "" : " dim")}>
@@ -291,7 +298,7 @@ function ExperienceCard({ exp, id, logo, tech, matchMode, onTech, onOpen }: Card
         {duration && <small>{duration}</small>}
         {exp.current && <em className="now">en cours</em>}
       </div>
-      <article className={"card xp" + (onOpen ? " zoomable" : "") + (open ? " open" : "")} aria-label={exp.company} onClick={onOpen}>
+      <article className={"card xp" + (onOpen ? " zoomable" : "") + (open ? " open" : "")} aria-label={exp.company} onClick={onOpen && ((e) => { if (!(e.target as Element).closest(".xp-tech")) onOpen(); })}>
         <div className="xp-company">
           <span className={"plate" + (logo ? "" : " empty")} style={{ viewTransitionName: `logo-${id}` }}>
             {logo && <img src={logo} alt={`Logo ${exp.company}`} />}
@@ -316,7 +323,7 @@ function ExperienceCard({ exp, id, logo, tech, matchMode, onTech, onOpen }: Card
             </svg>
           </button>}
         </div>
-        <div className="xp-tech" onClick={(e) => e.stopPropagation()}>
+        <div className="xp-tech">
           <TechList list={exp.stack} tech={tech} onTech={onTech} />
         </div>
       </article>
