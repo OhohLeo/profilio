@@ -73,6 +73,7 @@ export default function App() {
   const [matchMode, setMatchMode] = useState<MatchMode>("any");
   const { experiences } = useCvContent();
   const { zoom, go, zoomOut } = useZoom();
+  const filterDialog = useRef<HTMLDialogElement>(null);
 
   const project = PROJECTS.find((p) => p.id === zoom.p) ?? null;
   const projectExp = project && (experiences.find((e) => projectId(e) === project.id) ?? staticExperiences.find((e) => e.id === project.id));
@@ -96,19 +97,32 @@ export default function App() {
 
   return (
     <>
-      <button className="theme-toggle" type="button" onClick={toggleTheme} aria-pressed={theme === "dark"}
-        aria-label={theme === "dark" ? "Activer le mode clair" : "Activer le mode sombre"}
-        data-tooltip={theme === "dark" ? "Mode clair" : "Mode sombre"}>
-        {theme === "dark" ? (
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
-            <circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5" />
-          </svg>
-        ) : (
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
-            <path d="M20 14a8.5 8.5 0 0 1-10-10A8.5 8.5 0 1 0 20 14Z" />
-          </svg>
+      <div className={"toolbar" + (project ? " in-project" : "")} role="toolbar" aria-label="Actions">
+        <button className="tool" type="button" onClick={toggleTheme} aria-pressed={theme === "dark"}
+          aria-label={theme === "dark" ? "Activer le mode clair" : "Activer le mode sombre"}
+          data-tooltip={theme === "dark" ? "Mode clair" : "Mode sombre"}>
+          {theme === "dark" ? (
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+              <circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M20 14a8.5 8.5 0 0 1-10-10A8.5 8.5 0 1 0 20 14Z" /></svg>
+          )}
+        </button>
+        {!project && (
+          <button className={"tool" + (tech.length ? " active" : "")} type="button" aria-label="Filtrer par technologie" data-tooltip="Filtrer par technologie" aria-haspopup="dialog" aria-controls="technology-filter"
+            onClick={() => filterDialog.current?.showModal()}>
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" aria-hidden="true"><path d="M3 4h18l-7 8v7l-4 2v-9Z" /></svg>
+            {tech.length > 0 && <span className="filter-count" aria-label={`${tech.length} technologies sélectionnées`}>{tech.length}</span>}
+          </button>
         )}
-      </button>
+        <a className="tool" href={profile.github} target="_blank" rel="noreferrer" aria-label="GitHub (nouvel onglet)" data-tooltip="GitHub">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.1-1.46-1.1-1.46-.9-.62.07-.6.07-.6 1 .07 1.52 1.03 1.52 1.03.89 1.52 2.34 1.08 2.9.83.09-.64.35-1.08.63-1.33-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2Z" /></svg>
+        </a>
+        <a className="tool" href={`${import.meta.env.BASE_URL}cv/leo-martin-cv.pdf`} download aria-label="Télécharger le CV (PDF, 1 page)" data-tooltip="Télécharger le CV (PDF)">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 20h16" /></svg>
+        </a>
+      </div>
       {project && projectExp && (
         <header className="top">
           <Rail project={project} company={projectExp.company} zoom={zoom} go={go} />
@@ -131,18 +145,9 @@ export default function App() {
               <p className="tagline">{profile.tagline}</p>
             </div>
             <div className="hero-contact" aria-label="Coordonnées et CV">
-              <span className="location">{profile.location}</span>
-              <a className="email" href={`mailto:${profile.email}`}>{profile.email}</a>
-              <a className="website" href={profile.website}>{profile.website.replace("https://", "")}</a>
-              <div className="cta">
-                <a className="btn" href={`${import.meta.env.BASE_URL}cv/leo-martin-cv.pdf`} download>
-                  <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-                    <path d="M10 2v10m-4-4 4 4 4-4M3 13v4h14v-4" />
-                  </svg>
-                  Télécharger le CV <small>PDF · 1 page</small>
-                </a>
-                <a className="btn ghost" href={profile.github} target="_blank" rel="noreferrer">GitHub ↗</a>
-              </div>
+              <span className="location"><Icon d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21Zm0-8.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />{profile.location}</span>
+              <a className="email" href={`mailto:${profile.email}`}><Icon d="M3 6h18v12H3Zm0 1 9 7 9-7" />{profile.email}</a>
+              <a className="website" href={profile.website}><Icon d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm-9-9h18M12 3c2.5 2.5 3.5 5.5 3.5 9s-1 6.5-3.5 9c-2.5-2.5-3.5-5.5-3.5-9S9.5 5.5 12 3Z" />{profile.website.replace("https://", "")}</a>
             </div>
             <div className="personal-details">
               <p className="profile-summary">{profile.summary}</p>
@@ -150,7 +155,7 @@ export default function App() {
             </div>
           </header>
 
-          <TechnologyFilter technologies={techCounts.map(([name]) => name)} tech={tech} matchMode={matchMode} onMatchMode={setMatchMode} onTech={toggle} onClear={() => setTech([])} />
+          <TechnologyFilter dialog={filterDialog} technologies={techCounts.map(([name]) => name)} tech={tech} matchMode={matchMode} onMatchMode={setMatchMode} onTech={toggle} onClear={() => setTech([])} />
           <div className="cv-layout">
             <div className="cv-content">
               <section id="parcours" aria-labelledby="parcours-heading">
@@ -177,37 +182,47 @@ export default function App() {
             </div>
           </div>
         </div>
-        <footer className="site-footer" id="confidentialite">
-          <h2>Confidentialité</h2>
-          <p>
-            Ce site n'utilise ni cookie, ni traceur, ni outil de mesure d'audience, et n'affiche aucune publicité.
-            Seule votre préférence de thème (clair ou sombre) est mémorisée dans le stockage local de votre navigateur ; elle ne quitte pas votre appareil.
-            Votre adresse IP peut apparaître dans les journaux techniques de l'hébergeur et du serveur de contenu, uniquement pour assurer le fonctionnement et la sécurité du service.
-            Aucune donnée personnelle n'est collectée par ailleurs. Pour toute question : <a href={`mailto:${profile.email}`}>{profile.email}</a>.
-          </p>
-          <p className="muted">Site personnel à but non commercial : pas de conditions générales ni de bandeau de consentement, faute de service proposé ou de traceur à autoriser.</p>
-        </footer>
+        <PrivacyNote email={profile.email} />
       </main>
     </>
   );
 }
 
-function TechnologyFilter({ technologies, tech, matchMode, onMatchMode, onTech, onClear }: { technologies: string[]; tech: string[]; matchMode: MatchMode; onMatchMode: (mode: MatchMode) => void; onTech: (tech: string) => void; onClear: () => void }) {
-  const dialog = useRef<HTMLDialogElement>(null);
+function Icon({ d }: { d: string }) {
+  return <svg className="ci" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>;
+}
+
+/** Une ligne discrète ; le détail s'ouvre à la demande (ou via `#confidentialite`). */
+function PrivacyNote({ email }: { email: string }) {
+  const [open, setOpen] = useState(() => location.hash === "#confidentialite");
+  useEffect(() => {
+    const on = () => { if (location.hash === "#confidentialite") setOpen(true); };
+    addEventListener("hashchange", on);
+    return () => removeEventListener("hashchange", on);
+  }, []);
+  return (
+    <footer className="site-footer" id="confidentialite">
+      <details open={open} onToggle={(e) => setOpen(e.currentTarget.open)}>
+        <summary>Confidentialité : aucun cookie, aucun traceur</summary>
+        <p>
+          Ni outil de mesure d'audience ni publicité. Seule votre préférence de thème (clair ou sombre) est mémorisée dans le stockage local de votre navigateur ; elle ne quitte pas votre appareil.
+          Votre adresse IP peut apparaître dans les journaux techniques de l'hébergeur et du serveur de contenu, uniquement pour assurer le fonctionnement et la sécurité du service.
+          Aucune autre donnée personnelle n'est collectée. Site personnel à but non commercial : pas de bandeau de consentement, faute de traceur à autoriser.
+          Une question : <a href={`mailto:${email}`}>{email}</a>.
+        </p>
+      </details>
+    </footer>
+  );
+}
+
+function TechnologyFilter({ dialog, technologies, tech, matchMode, onMatchMode, onTech, onClear }: { dialog: React.RefObject<HTMLDialogElement | null>; technologies: string[]; tech: string[]; matchMode: MatchMode; onMatchMode: (mode: MatchMode) => void; onTech: (tech: string) => void; onClear: () => void }) {
   const [search, setSearch] = useState("");
   const normalize = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("fr");
   const visible = technologies.filter((name) => normalize(name).includes(normalize(search.trim())));
   const close = () => dialog.current?.close();
   return (
     <>
-      <button className={"filter-fab" + (tech.length ? " active" : "")} type="button" aria-label="Filtrer par technologie" data-tooltip="Filtrer par technologie" aria-haspopup="dialog" aria-controls="technology-filter"
-        onClick={() => { setSearch(""); dialog.current?.showModal(); }}>
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" aria-hidden="true">
-          <path d="M3 4h18l-7 8v7l-4 2v-9Z" />
-        </svg>
-        {tech.length > 0 && <span className="filter-count" aria-label={`${tech.length} technologies sélectionnées`}>{tech.length}</span>}
-      </button>
-      <dialog ref={dialog} id="technology-filter" className="filter-sheet" aria-labelledby="filter-title" onKeyDown={(event) => {
+      <dialog ref={dialog} id="technology-filter" className="filter-sheet" aria-labelledby="filter-title" onClose={() => setSearch("")} onKeyDown={(event) => {
         if (event.key !== "Tab") return;
         const controls = [...event.currentTarget.querySelectorAll<HTMLElement>("button:not(:disabled), input:not(:disabled), select:not(:disabled)")].filter((element) => element.getClientRects().length > 0);
         const first = controls[0], last = controls[controls.length - 1];
