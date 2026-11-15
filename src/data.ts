@@ -50,12 +50,12 @@ export const experiences: Experience[] = [
       "Intégrateur de composants (React, UmiJS, Antd, MakoJS, Buckets)",
       "Intégrateur de solutions IA (Google Document AI, TimeFS)",
       "Déploiement & supervision de l'infra (GCE, Docker, Grafana, Ansible, Trivy, ZAP)",
-      "Déploiement d'une plateforme de gestion des passerelles LoRaWAN.",
-      "Back-office ERPNext : gestion des stocks et des interventions, mobilapp & site personnalisé.",
+      "Déploiement d'une plateforme de gestion des passerelles LoRaWAN (ChirpStack, Nebula).",
+      "Back-office : gestion des stocks et des interventions, mobilapp & site personnalisé (ERPNext, React, Capacitor, Antd).",
     ],
     stack: [
       "Python", "PostgreSQL", "NATS", "Claude", "React", "UmiJS", "Antd", "MakoJS",
-      "Google Document AI", "TimeFS", "GCE", "Docker", "Grafana", "Ansible", "Trivy", "ZAP", "LoRaWAN", "ERPNext",
+      "Google Document AI", "TimeFS", "GCE", "Docker", "Grafana", "Ansible", "Trivy", "ZAP", "LoRaWAN", "ChirpStack", "Nebula", "ERPNext", "Capacitor",
     ],
   },
   {
@@ -117,8 +117,8 @@ export const resumeHighlights: Record<string, string[]> = {
     "Conception et orchestration d'une plateforme IoT microservices : Python, PostgreSQL et NATS.",
     "Intégration des interfaces React et de solutions IA (Claude, Google Document AI, TimeFS).",
     "Déploiement et supervision cloud : GCE, Docker, Grafana, Ansible ; sécurité avec Trivy et ZAP.",
-    "Déploiement d'une plateforme de gestion des passerelles LoRaWAN.",
-    "Back-office ERPNext : gestion des stocks et des interventions, mobilapp & site personnalisé.",
+    "Déploiement d'une plateforme de gestion des passerelles LoRaWAN (ChirpStack, Nebula).",
+    "Back-office : gestion des stocks et des interventions, mobilapp & site personnalisé (ERPNext, React, Capacitor, Antd).",
   ],
   qos: [
     "Migration d'un monolithe vers des microservices Go/gRPC sur GKE et Kubernetes.",

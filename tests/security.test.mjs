@@ -49,3 +49,12 @@ test("refuse les dotenv et les sources maps copiés dans le build", () => fixtur
   const findings = await checkBuild({ root, environment: {} });
   assert.deepEqual(findings.filter((item) => item.reason === "private-file").map((item) => item.file).sort(), [".env", "app.js.map"]);
 }));
+
+test("autorise .well-known/security.txt mais pas les autres fichiers cachés", () => fixture(async (root) => {
+  await mkdir(join(root, "dist/.well-known"));
+  await writeFile(join(root, "dist/.well-known/security.txt"), "Contact: mailto:security@example.org");
+  assert.deepEqual(await checkBuild({ root, environment: {} }), []);
+  await writeFile(join(root, "dist/.well-known/other.txt"), "x");
+  const findings = await checkBuild({ root, environment: {} });
+  assert.deepEqual(findings.filter((item) => item.reason === "private-file").map((item) => item.file), [".well-known/other.txt"]);
+}));
