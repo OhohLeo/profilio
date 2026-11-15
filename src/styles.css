@@ -333,3 +333,8 @@ svg.focus .base { opacity: .45; }
   .xp .xp-missions { grid-template-rows: 1fr; opacity: 1; visibility: visible; }
   .dim { opacity: 1; } body { background: #fff; color: #000; }
 }
+
+.site-footer { margin-top: 56px; padding: 24px 0 40px; border-top: 1px solid var(--line); color: var(--muted); font-size: .875rem; line-height: 1.55; }
+.site-footer h2 { font-size: 1rem; margin: 0 0 8px; color: var(--fg); }
+.site-footer p { margin: 0 0 8px; max-width: 70ch; }
+.site-footer a { color: var(--accent); }

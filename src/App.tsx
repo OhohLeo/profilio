@@ -177,6 +177,16 @@ export default function App() {
             </div>
           </div>
         </div>
+        <footer className="site-footer" id="confidentialite">
+          <h2>Confidentialité</h2>
+          <p>
+            Ce site n'utilise ni cookie, ni traceur, ni outil de mesure d'audience, et n'affiche aucune publicité.
+            Seule votre préférence de thème (clair ou sombre) est mémorisée dans le stockage local de votre navigateur ; elle ne quitte pas votre appareil.
+            Votre adresse IP peut apparaître dans les journaux techniques de l'hébergeur et du serveur de contenu, uniquement pour assurer le fonctionnement et la sécurité du service.
+            Aucune donnée personnelle n'est collectée par ailleurs. Pour toute question : <a href={`mailto:${profile.email}`}>{profile.email}</a>.
+          </p>
+          <p className="muted">Site personnel à but non commercial : pas de conditions générales ni de bandeau de consentement, faute de service proposé ou de traceur à autoriser.</p>
+        </footer>
       </main>
     </>
   );
